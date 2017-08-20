@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>873</width>
+    <height>552</height>
+   </rect>
+  </property>
+  <property name="focusPolicy">
+   <enum>Qt::StrongFocus</enum>
+  </property>
+  <property name="windowTitle">
+   <string>PyKaraokeServer</string>
+  </property>
+  <property name="animated">
+   <bool>true</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="SearchLabel">
+        <property name="font">
+         <font>
+          <family>Segoe UI</family>
+          <pointsize>11</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Search</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="searchLineEdit">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QTableView" name="searchResultsTableView">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::CustomContextMenu</enum>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QAbstractScrollArea::AdjustToContents</enum>
+      </property>
+      <property name="alternatingRowColors">
+       <bool>true</bool>
+      </property>
+      <property name="showGrid">
+       <bool>false</bool>
+      </property>
+      <property name="sortingEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>873</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionMenuNewScreen"/>
+    <addaction name="actionMenuSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionMenuQuit"/>
+   </widget>
+   <addaction name="menu_File"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="minimumSize">
+    <size>
+     <width>300</width>
+     <height>477</height>
+    </size>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+    </font>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::StrongFocus</enum>
+   </property>
+   <property name="acceptDrops">
+    <bool>true</bool>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string/>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="leftMargin">
+      <number>10</number>
+     </property>
+     <property name="topMargin">
+      <number>10</number>
+     </property>
+     <property name="rightMargin">
+      <number>10</number>
+     </property>
+     <property name="bottomMargin">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Playlist</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="PlaylistTableView" name="playlistTableView">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>280</width>
+         <height>377</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::StrongFocus</enum>
+       </property>
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAsNeeded</enum>
+       </property>
+       <property name="sizeAdjustPolicy">
+        <enum>QAbstractScrollArea::AdjustIgnored</enum>
+       </property>
+       <property name="dragDropMode">
+        <enum>QAbstractItemView::DragDrop</enum>
+       </property>
+       <property name="defaultDropAction">
+        <enum>Qt::CopyAction</enum>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <property name="showGrid">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="playButton">
+         <property name="toolTip">
+          <string>Play</string>
+         </property>
+         <property name="toolTipDuration">
+          <number>-1</number>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>images/play.png</normaloff>images/play.png</iconset>
+         </property>
+         <property name="shortcut">
+          <string>Ctrl+P</string>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="autoRepeat">
+          <bool>false</bool>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="stopButton">
+         <property name="toolTip">
+          <string>Stop</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>images/stop.png</normaloff>images/stop.png</iconset>
+         </property>
+         <property name="shortcut">
+          <string>Ctrl+S</string>
+         </property>
+         <property name="autoDefault">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="nextButton">
+         <property name="toolTip">
+          <string>Next song</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>images/next.png</normaloff>images/next.png</iconset>
+         </property>
+         <property name="shortcut">
+          <string>Ctrl+N</string>
+         </property>
+         <property name="autoDefault">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNewScreen"/>
+  </widget>
+  <action name="actionMenuQuit">
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+  </action>
+  <action name="actionNewScreen">
+   <property name="icon">
+    <iconset>
+     <normaloff>images/new_screen.png</normaloff>images/new_screen.png</iconset>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="toolTip">
+    <string>New screen</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionMenuSettings">
+   <property name="text">
+    <string>&amp;Settings...</string>
+   </property>
+  </action>
+  <action name="actionMenuNewScreen">
+   <property name="text">
+    <string>New Lyrics Window</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PlaylistTableView</class>
+   <extends>QTableView</extends>
+   <header>widgets</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionMenuQuit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>283</x>
+     <y>295</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
