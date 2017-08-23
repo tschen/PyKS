@@ -1,5 +1,5 @@
 # PyQt5 imports
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtNetwork, QtWidgets
 
 # Python3 std lib imports
 import configparser
@@ -96,6 +96,7 @@ class AlertDialog (QtWidgets.QDialog, Ui_AlertDialog):
 
 class Settings (object):
     DEFAULT_PERFORMER_MODE = True
+    DEFAULT_SECONDS_TO_WAIT = -1
     DEFAULT_SERVER_ON_STARTUP = False
     DEFAULT_HOST_ADDRESS = "0.0.0.0"
     DEFAULT_HOST_PORT = 0
@@ -105,6 +106,7 @@ class Settings (object):
     DEFAULT_SEARCH_FOLDERS = []
     def __init__(self,
                  performerMode=DEFAULT_PERFORMER_MODE,
+                 secondsToWait=DEFAULT_SECONDS_TO_WAIT,
                  serverOnStartup=DEFAULT_SERVER_ON_STARTUP,
                  hostAddress=DEFAULT_HOST_ADDRESS,
                  hostPort=DEFAULT_HOST_PORT,
@@ -114,6 +116,7 @@ class Settings (object):
 
         # General Settings
         self.performerMode = performerMode
+        self.secondsToWait = secondsToWait
 
         # Server settings
         self.serverOnStartup = serverOnStartup
@@ -151,6 +154,12 @@ class Settings (object):
                                                                 'PerformerMode')
             except:
                 settings.performerMode = Settings.DEFAULT_PERFORMER_MODE
+
+            try:
+                settings.secondsToWait = config.getint('General',
+                                                       'SecondsToWait')
+            except:
+                settings.secondsToWait = Settings.DEFAULT_SECONDS_TO_WAIT
 
 
             # Server settings
@@ -209,7 +218,8 @@ class Settings (object):
         config.optionxform = str
 
         # General settings
-        config['General'] = {'PerformerMode': newSettings.performerMode}
+        config['General'] = {'PerformerMode': newSettings.performerMode,
+                             'SecondsToWait': newSettings.secondsToWait}
 
         # Server settings
         config['Server'] = {'ServerOnStartup': newSettings.serverOnStartup,
@@ -248,6 +258,7 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
 
         # General settings
         self.performerModeCheckBox.setChecked(curSettings.performerMode)
+        self.secondsToWaitTextBox.setText(str(curSettings.secondsToWait))
 
         # Server settings
         self.hostAddressTextBox.setText(curSettings.hostAddress)
@@ -255,6 +266,8 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
         self.serverOnStartupCheckBox.setChecked(curSettings.serverOnStartup)
         self.maxConnectedClientsTextBox.setText(
             str(curSettings.maxConnectedClients))
+        self.autoDetectButton.clicked.connect(self.autoDetectNetworkInterface)
+
 
         # Database settings
         self.searchFolderList.addItems(curSettings.searchFolders)
@@ -269,6 +282,7 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
     def accept(self):
         # On accept, save all the new settings
         self.newSettings.performerMode = self.performerModeCheckBox.isChecked()
+        self.newSettings.secondsToWait = self.secondsToWaitTextBox.text()
 
         self.newSettings.hostAddress = self.hostAddressTextBox.text()
         self.newSettings.hostPort = int (self.hostPortTextBox.text())
@@ -292,6 +306,61 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
     @QtCore.pyqtSlot(int)
     def changeSettingMenu (self, index):
         self.stackedWidget.setCurrentIndex(index)
+
+
+    @QtCore.pyqtSlot()
+    def autoDetectNetworkInterface(self):
+        hostAddresses = []
+        interfaceFlags = QtNetwork.QNetworkInterface.IsUp | \
+                          QtNetwork.QNetworkInterface.IsRunning
+        # Grab all available interfaces
+        allInterfaces = QtNetwork.QNetworkInterface.allInterfaces()
+        for interface in allInterfaces:
+            if (interface.flags() & interfaceFlags == interfaceFlags):
+                addresses = interface.addressEntries()
+                for address in addresses:
+                    if (address.ip().protocol() ==
+                            QtNetwork.QAbstractSocket.IPv4Protocol) and \
+                                    address.ip() != (
+                                    QtNetwork.QHostAddress(
+                                        QtNetwork.QHostAddress.LocalHost)):
+                        hostAddresses.append(address.ip())
+                        # If there is more than one host address detected,
+                        # show error dialog
+                        if len(hostAddresses) > 1:
+                            alert = AlertDialog("Network Error",
+                                                "Could not auto detect network "
+                                                "settings")
+                            alert.show()
+                        else: # only one IP address returned, try port 80
+                            testServer = QtNetwork.QTcpServer(self)
+                            # Try to start a QTcpServer at hostAddress:80
+                            # If the server starts, return those values as
+                            # detected values
+                            if testServer.listen(hostAddresses[0], 80):
+                                ipAddress = hostAddresses[0].toString()
+                                # populate server text boxes
+                                self.hostAddressTextBox.setText(ipAddress)
+                                self.hostPortTextBox.setText(str(80))
+                                testServer.close()
+                            else:
+                                # Could not listen at detected IP address and
+                                # port 80. This may be because port 80 is
+                                # being used by another service, so let
+                                # QTcpServer pick the port.
+                                if testServer.listen(hostAddresses[0]):
+                                    ipAddress = hostAddresses[0].toString()
+                                    port = testServer.serverPort()
+                                    # populate server text boxes
+                                    self.hostAddressTextBox.setText(ipAddress)
+                                    self.hostPortTextBox.setText(str(port))
+                                    testServer.close()
+                                else: # Can't auto detect network settings
+                                    alert = AlertDialog("Network Error",
+                                                        "Could not auto "
+                                                        "detect  network "
+                                                        "settings")
+                                    alert.show()
 
 
     @QtCore.pyqtSlot()

@@ -36,6 +36,7 @@ CDG_HEIGHT = 216
 
 class CdgPlayer (QtCore.QObject):
     cdgImageUpdated = QtCore.pyqtSignal()
+    endOfMedia = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super(CdgPlayer, self).__init__(parent)
@@ -59,7 +60,7 @@ class CdgPlayer (QtCore.QObject):
         # with it and it will throw an exception. Calling setColorCount
         # creates a color table and sets all color indices to (0, 0, 0).
         self.cdgImage.setColorCount(16)
-        # Make the background black
+        # Make the background one color
         self.cdgImage.fill(0)
 
         # Convert the cdgImage into a 2D array so we can manipulate pixels
@@ -116,7 +117,7 @@ class CdgPlayer (QtCore.QObject):
 
 
     def stop(self):
-        # Set background to black
+        # Set background to solid color
         self.cdgImage.fill(0)
         # clear the mediaPlayer content
         self.mediaPlayer.setMedia(QtMultimedia.QMediaContent())
@@ -133,6 +134,10 @@ class CdgPlayer (QtCore.QObject):
         # Play the song once we've loaded the media
         if status == QtMultimedia.QMediaPlayer.LoadedMedia:
             self.mediaPlayer.play()
+
+        # When a song has finished playing, emit the end of media signal
+        if status == QtMultimedia.QMediaPlayer.EndOfMedia:
+            self.endOfMedia.emit()
 
         # If the file is invalid, just set the background to black
         if status == QtMultimedia.QMediaPlayer.InvalidMedia:
@@ -301,27 +306,29 @@ class CdgPlayer (QtCore.QObject):
 
                 # We perform bit operations on only the last 6 bits of tilePixel
                 for i in range (6):
-                    # Check if last bit of tilePixel is a 0 or 1. This
-                    # determines whether we use color0 or color1
-                    if (tilePixel & 0x1):
-                        # If this is the XOR variant, XOR the color found at
-                        # the pixel with color1. Otherwise, for normal tile
-                        # block operations, just set the pixel to color 1.
-                        if is_xor:
-                            self.cdgImageAsBitmap[y][x] = \
-                                (self.cdgImageAsBitmap[y][x] ^ color1)
+                    # Only set pixels if we are within the CDG window
+                    if y <= CDG_HEIGHT and x <= CDG_WIDTH:
+                        # Check if last bit of tilePixel is a 0 or 1. This
+                        # determines whether we use color0 or color1
+                        if (tilePixel & 0x1):
+                            # If this is the XOR variant, XOR the color found at
+                            # the pixel with color1. Otherwise, for normal tile
+                            # block operations, just set the pixel to color 1.
+                            if is_xor:
+                                self.cdgImageAsBitmap[y][x] = \
+                                    (self.cdgImageAsBitmap[y][x] ^ color1)
+                            else:
+                                self.cdgImageAsBitmap[y][x] = color1
                         else:
-                            self.cdgImageAsBitmap[y][x] = color1
-                    else:
-                        # If this is the XOR variant, XOR the color found at
-                        # the pixel with color1. Otherwise, for normal tile
-                        # block operations, just set the pixel to color 1.
-                        if is_xor:
-                            self.cdgImageAsBitmap[y][x] = \
-                                (self.cdgImageAsBitmap[y][x] ^ color0)
-                        else:
-                            self.cdgImageAsBitmap[y][x] = color0
-                    # Shift to the next bit
+                            # If this is the XOR variant, XOR the color found at
+                            # the pixel with color1. Otherwise, for normal tile
+                            # block operations, just set the pixel to color 1.
+                            if is_xor:
+                                self.cdgImageAsBitmap[y][x] = \
+                                    (self.cdgImageAsBitmap[y][x] ^ color0)
+                            else:
+                                self.cdgImageAsBitmap[y][x] = color0
+                        # Shift to the next bit
                     tilePixel = tilePixel >> 1
                     # Move to the next column
                     x -= 1

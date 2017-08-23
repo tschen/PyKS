@@ -1,7 +1,9 @@
 # PyQt5 imports
-from PyQt5 import QtCore, QtSql, QtWidgets
+from PyQt5 import QtCore, QtGui, QtNetwork, QtSql, QtWidgets
 
 # Python3 std lib imports
+import collections
+import json
 import os
 import re
 import sys
@@ -9,12 +11,15 @@ import time
 
 # PyKS imports
 from cdg import CdgPlayer
+from server import KaraokeServer
 from ui_mainwindow import Ui_MainWindow
 from widgets import AddToPlaylistDialog, AlertDialog, \
     LyricsWindow, Settings, SettingsDialog
 
 
 class PlaylistModel (QtCore.QAbstractTableModel):
+    playlistUpdated = QtCore.pyqtSignal(list)
+
     NUM_COLS = 4
     QUEUE_NUM_COL = 0
     PERF_COL = 1
@@ -63,7 +68,7 @@ class PlaylistModel (QtCore.QAbstractTableModel):
             return self.playlist[index.row()][index.column()-1]
 
 
-    def appendSongs (self, songs):
+    def appendSongs(self, songs):
         self.insertSongs(len(self.playlist), songs)
 
 
@@ -74,22 +79,24 @@ class PlaylistModel (QtCore.QAbstractTableModel):
             self.playlist.insert(position, song)
             position += 1
         self.endInsertRows()
+        self.playlistUpdated.emit(self.playlist)
 
 
-    def removeSong (self, position):
+    def removeSong(self, position):
         self.beginRemoveRows(QtCore.QModelIndex(), position, position)
         del (self.playlist[position])
         self.endRemoveRows()
+        self.playlistUpdated.emit(self.playlist)
 
 
-    def getCurSong (self):
+    def getCurSong(self):
         if len(self.playlist):
             return self.playlist[0]
         else:
             return None
 
 
-    def getNextSong (self):
+    def getNextSong(self):
         if len (self.playlist):
             self.removeSong(0)
             return self.getCurSong()
@@ -97,12 +104,15 @@ class PlaylistModel (QtCore.QAbstractTableModel):
 
 class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     SETTINGS_FILE = 'pyks.ini'
-    SONGBOOK_FILE = 'songbook.db'
+    SONGBOOK_DB_FILE = 'songbook.db'
+    SONGBOOK_JSON_FILE = 'sonbook.json'
 
     NUM_COLS = 3
     ARTIST_COL = 0
     TITLE_COL = 1
     SONG_ID_COL = 2
+
+    songbookUpdated = QtCore.pyqtSignal('QString')
 
     def __init__(self, parent=None):
         super(PyKS, self).__init__(parent)
@@ -120,16 +130,23 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             # Write settings to ini file
             Settings.writeSettings(self.settings, self.SETTINGS_FILE)
 
-        # The songbook is stored in a SQLite database on disk. On startup
-        # try to open the database. If the databse does not exist, create it
-        # by searching through files found in self.settings.searchFolders.
-        self.songdb = QtSql.QSqlDatabase.addDatabase('QSQLITE')
-        self.songdb.setDatabaseName(self.SONGBOOK_FILE)
-        if not os.path.isfile(self.SONGBOOK_FILE):
+        # The songbook is stored as a SQLite database and as a JSON file on
+        # disk. The SQLLite database is used by the main app while the JSON
+        # file is used by the web app. On startup try to open both database
+        # files. If either databse does not exist, create it by searching
+        # through files found in self.settings.searchFolders.
+        self.songbookdb = QtSql.QSqlDatabase.addDatabase('QSQLITE')
+        self.songbookdb.setDatabaseName(self.SONGBOOK_DB_FILE)
+
+        if not os.path.isfile(self.SONGBOOK_DB_FILE) or not os.path.isfile(
+                self.SONGBOOK_JSON_FILE):
             self._createSongbook(self.settings.searchFolders)
 
         # We close the database when the app closes
-        self.songdb.open()
+        self.songbookdb.open()
+
+        # Open the JSON file and read in its contents
+        self.songbookJSON = open (self.SONGBOOK_JSON_FILE, 'r').read()
 
         # Setup search results panel
         # The underlying model holding the data displayed by
@@ -143,6 +160,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Keep fetching until all rows are fetched
         while (self.sqlQueryModel.canFetchMore()):
             self.sqlQueryModel.fetchMore()
+
 
         # Set up QSortFilterProxyModel to allow for sorting
         self.sortFilterProxyModel = QtCore.QSortFilterProxyModel(self)
@@ -211,9 +229,61 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionMenuNewScreen.triggered.connect(self.showNewLyricsWindow)
         self.actionNewScreen.triggered.connect(self.showNewLyricsWindow)
         self.actionMenuSettings.triggered.connect(self.showSettings)
+        self.actionToggleServer.triggered.connect(self.toggleServer)
 
         # CdgPlayer
         self.cdgPlayer = CdgPlayer()
+        # Play next song (if there is one) when we reach the end of the
+        # current song
+        self.cdgPlayer.endOfMedia.connect(self.next)
+
+        # KaraokeServer
+        self.karaokeServer = KaraokeServer (self.songbookJSON,
+                                            self.settings.adminPassword)
+        self.karaokeServerState = KaraokeServer.OFF
+        # Set up a QLabel on the toolbar. We will replace the text of the label
+        # whenever we toggle the server's state.
+        # NOTE: This needs ot be setup before we try to start the server
+        self.toggleServerLabel = self.toolBar.addWidget(QtWidgets.QLabel())
+        self.serverOnIcon = QtGui.QIcon()
+        self.serverOnIcon.addPixmap(QtGui.QPixmap("images/start_server.png"),
+                                     QtGui.QIcon.Normal,
+                                     QtGui.QIcon.Off)
+        self.serverOffIcon = QtGui.QIcon()
+        self.serverOffIcon.addPixmap(QtGui.QPixmap("images/stop_server.png"),
+                                    QtGui.QIcon.Normal,
+                                    QtGui.QIcon.Off)
+        # We need to connect the serverStateChanged signal before trying to
+        # start the server.
+        self.karaokeServer.serverStateChanged.connect(
+            self.processServerStateChanged)
+
+        if self.settings.serverOnStartup:
+            result = self.karaokeServer.startServer(
+                QtNetwork.QHostAddress(self.settings.hostAddress),
+                self.settings.hostPort)
+            if not result:
+                alert = AlertDialog("Karaoke Server Error", "Could not start "
+                                                            "Karaoke Server "
+                                                            "on %s:%d" %
+                                    (self.settings.hostAddress,
+                                    self.settings.hostPort))
+                alert.exec()
+                # If we fail to connect on startup, set the server toggle
+                # icon to serverOffIcon
+                self.processServerStateChanged(KaraokeServer.OFF)
+
+        self.karaokeServer.addToPlaylist.connect(self.appendToPlaylist)
+        self.karaokeServer.play.connect(self.play)
+        self.karaokeServer.nextSong.connect(self.next)
+        self.karaokeServer.stop.connect(self.stop)
+        self.karaokeServer.playNow.connect(self.insertInPlaylistAt)
+        self.karaokeServer.playNext.connect(self.insertInPlaylistAt)
+
+        self.songbookUpdated.connect(self.karaokeServer.updateSongbook)
+        self.playlistModel.playlistUpdated.connect(
+            self.karaokeServer.updatePlaylist)
+
 
         # Number of active lyrics windows being displayed
         self.numLyricsWindows = 0
@@ -299,9 +369,19 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         if not self.settings.performerMode or result:
             selectedSongs = [[performer] + selectedSong for selectedSong in
                              selectedSongs]
-            self.playlistModel.appendSongs(selectedSongs)
+            self.appendToPlaylist(selectedSongs)
 
-            self.playlistTableView.resizeColumnsToContents()
+
+    @QtCore.pyqtSlot(list)
+    def appendToPlaylist(self, songs):
+        self.playlistModel.appendSongs(songs)
+        self.playlistTableView.resizeColumnsToContents()
+
+
+    @QtCore.pyqtSlot(list, int)
+    def insertInPlaylistAt(self, song, position):
+        self.playlistModel.insertSongs(position, song)
+        self.playlistTableView.resizeColumnsToContents()
 
 
     def _insertSongAt(self, position):
@@ -318,8 +398,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
             if not self.settings.performerMode or result:
                 selectedSong = [[performer] + selectedSong[0]]
-                self.playlistModel.insertSongs(position, selectedSong)
-
+                self.insertInPlaylistAt(selectedSong, position)
                 return True
         return False
 
@@ -413,6 +492,39 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     @QtCore.pyqtSlot()
+    def toggleServer(self):
+        if self.karaokeServerState == KaraokeServer.ON:
+            self.karaokeServer.stopServer()
+        else:
+            print (self.settings.hostPort)
+            result = self.karaokeServer.startServer(
+                QtNetwork.QHostAddress(self.settings.hostAddress),
+                self.settings.hostPort)
+            if not result:
+                alert = AlertDialog("Karaoke Server Error", "Could not start "
+                                                            "Karaoke Server "
+                                                            "on %s:%d" %
+                                    (self.settings.hostAddress,
+                                     self.settings.hostPort))
+                alert.exec()
+
+
+    @QtCore.pyqtSlot(int)
+    def processServerStateChanged(self, state):
+        self.karaokeServerState = state
+        label = self.toolBar.widgetForAction(self.toggleServerLabel)
+        if state == KaraokeServer.ON:
+            self.actionToggleServer.setIcon(self.serverOffIcon)
+            label.setText("Serving: %s:%d" % (self.settings.hostAddress,
+                                              self.settings.hostPort))
+            self.actionToggleServer.setToolTip("Turn server off")
+        else:
+            self.actionToggleServer.setIcon(self.serverOnIcon)
+            label.setText("Not Serving")
+            self.actionToggleServer.setToolTip("Turn server on")
+
+
+    @QtCore.pyqtSlot()
     def showSettings(self):
         settingsDialog = SettingsDialog(self.settings, self)
         settingsDialog.updateDatabaseClicked.connect(self.updateDatabaseClicked)
@@ -435,6 +547,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.settings.searchFolders = searchFolders
         Settings.writeSettings(self.settings, self.SETTINGS_FILE)
+        self.karaokeServer.setSongbook(self.songbookJSON)
 
 
     def _processNewSettings (self, newSettings):
@@ -444,6 +557,9 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.playlistTableView.hideColumn(PlaylistModel.PERF_COL)
             else: # Toggle to performer mode
                 self.playlistTableView.showColumn(PlaylistModel.PERF_COL)
+
+        if newSettings.adminPassword != self.settings.adminPassword:
+            self.karaokeServer.updatePassword(newSettings.adminPassword)
 
         if set(newSettings.searchFolders) != set (self.settings.searchFolders):
             self._createSongbook(newSettings.searchFolders)
@@ -510,12 +626,20 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Convert to a set to remove any redundant folders
         searchFolders = set(searchFolders)
 
-        self.songdb.exec("DROP TABLE songs")
-        self.songdb.exec(
+        self.songbookdb.exec("DROP TABLE songs")
+        self.songbookdb.exec(
                 "CREATE TABLE songs(artist TEXT, artistNoPunc TEXT, "
                 "title TEXT, titleNoPunc TEXT, "
                 "mp3FilePath TEXT, cdgFilePath TEXT, "
                 "songID INTEGER PRIMARY KEY AUTOINCREMENT)")
+
+        # Create the songbook JSON file
+        # The file will have the following structure:
+        # {"response": "getsongbook""data": [{"artist": artist, "title": title,
+        # "artistNoPunc":
+        #            artistNoPunc, "titleNoPunc": titleNoPunc, "songID": id},...
+        #           ]}
+        self.songbookJSON = []
 
         # We scan through the folders and store mp3 files we find in the
         # mp3Files dictionary as
@@ -574,7 +698,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
             # Start a database transaction. We only want to commit the
             # database inserts as a batch rather than one at a time.
-            self.songdb.transaction()
+            self.songbookdb.transaction()
             i = 0
             while i < (totalFiles):
                 # If there are mp3_files, process them first.
@@ -611,7 +735,14 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                 QtCore.QCoreApplication.processEvents()
             # Once all song insertions have been executed, commit the
             # transactions and close the database.
-            self.songdb.commit()
+            self.songbookdb.commit()
+
+            self.songbookJSON = {"cmd": "getSongbook",
+                                 "response": {"data": self.songbookJSON}}
+            self.songbookJSON = json.dumps(self.songbookJSON)
+            f = open(self.SONGBOOK_JSON_FILE, 'w')
+            f.write(self.songbookJSON)
+            f.close()
 
             # If there are unmatched songs, write them out to a log file so
             # the user can fix them.
@@ -630,6 +761,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                     f.close()
                 except:
                     return
+            self.songbookUpdated.emit(self.songbookJSON)
 
 
     def _addSongToDB (self, artistTitle, mp3FilePath, cdgFilePath):
@@ -649,6 +781,17 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         query.addBindValue(cdgFilePath)
         query.exec_()
 
+        query.exec('SELECT max(songID) FROM songs')
+        query.first()
+        lastRowID = query.value(0)
+
+        # Add the song to songbookJSON
+        self.songbookJSON.append(collections.OrderedDict(
+            {"artist": artist,
+             "title": title,
+             "artistNoPunc": artistNoPunc,
+             "titleNoPunc": titleNoPunc,
+             "songID": lastRowID}))
 
     def _parseSongName(self, artistTitle):
         # Separate artist and title from the filename. We assume a hyphen
@@ -672,7 +815,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         # Close the database
-        self.songdb.close()
+        self.songbookdb.close()
 
 
 def main():
