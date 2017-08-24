@@ -91,7 +91,7 @@ class Ui_MainWindow(object):
         self.label_2.setObjectName("label_2")
         self.verticalLayout_2.addWidget(self.label_2)
         self.playlistTableView = PlaylistTableView(self.dockWidgetContents)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.playlistTableView.sizePolicy().hasHeightForWidth())
@@ -193,6 +193,6 @@ class Ui_MainWindow(object):
         self.actionNewScreen.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.actionMenuSettings.setText(_translate("MainWindow", "&Settings..."))
         self.actionMenuNewScreen.setText(_translate("MainWindow", "New Lyrics Window"))
-        self.actionToggleServer.setText(_translate("MainWindow", "actionToggleServer"))
+        self.actionToggleServer.setText(_translate("MainWindow", "toggleServer"))
 
 from widgets import PlaylistTableView

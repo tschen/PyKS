@@ -108,7 +108,6 @@ class WebServer (QtCore.QObject):
         else:
             status = b'404 Not Found'
             webResource = self.webResources['/notfound.html']
-        print (requestURI)
         data = (b''
                 b'HTTP/1.1 %s\r\n'
                 b'CONTENT-LENGTH: %d\r\n'
@@ -259,13 +258,11 @@ class KaraokeServer(QtCore.QObject):
 
 
     def _getSongbook(self, args):
-        print ("_getSongbook called")
         socket = self.sender()
         socket.sendTextMessage(self.songbook)
 
 
     def _getPlaylist(self, args):
-        print ("_getPlaylist called")
         socket = self.sender()
         response = self._createPlaylistResponse("getPlaylist")
         socket.sendTextMessage(response)
@@ -284,7 +281,6 @@ class KaraokeServer(QtCore.QObject):
 
 
     def _addToPlaylist(self, args):
-        print (args)
         self.addToPlaylist.emit([args])
 
 
@@ -310,7 +306,6 @@ class KaraokeServer(QtCore.QObject):
 
 
     def _playNow(self, args):
-        print ("_playNow called")
         socket = self.sender()
         if self._verifyClient(socket):
             self.playNow.emit([args], 0)
@@ -318,7 +313,6 @@ class KaraokeServer(QtCore.QObject):
 
 
     def _playNext(self, args):
-        print ("_playNext called")
         socket = self.sender()
         if self._verifyClient(socket):
             self.playNow.emit([args], 1)
@@ -334,7 +328,6 @@ class KaraokeServer(QtCore.QObject):
 
 
     def _submitPassword(self, args):
-        print (args)
         socket = self.sender()
         response = {"cmd": "submitPassword", "response": False}
         if len(args) == 1:
@@ -345,7 +338,6 @@ class KaraokeServer(QtCore.QObject):
                             + str(socket.peerPort())
                 self.admins.add(socketKey)
                 response["response"] = True
-        print (response)
         socket.sendTextMessage(json.dumps(response))
 
 

@@ -81,6 +81,8 @@
                             if (args.response.data.length > 0) {
                                 playlistTable.rows.add(args.response.data).draw()
                             }
+                            $.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
+                            $.fn.dataTable.tables({visible: true, api: true}).scroller.measure();
                             break;
                         case "submitPassword":
                             if (args.response) {
@@ -101,7 +103,6 @@
         function sendMessage(data) {
             data = JSON.stringify(data)
             websocket.send(data);
-            console.log("string sent :", '"' + data + '"');
 
         }
 
@@ -115,7 +116,20 @@
 
                 "columns": [
                     {"data": "artist"},
-                    {"data": "title"}
+                    {"data": "title"},
+                    {"data": "artistNoPunc"},
+                    {"data": "titleNoPunc"}
+                ],
+
+                "columnDefs": [
+                    {
+                        "targets": [2],
+                        "visible": false
+                    },
+                    {
+                        "targets": [3],
+                        "visible": false
+                    }
                 ],
 
                 "scrollY": "70vh",
@@ -132,6 +146,9 @@
                     getPlaylistCallback = callback;
                     sendMessage({"getPlaylist": []});
                 },
+
+                "searching": false,
+
                 "columns": [
                     // First column is autoincrementing indices, so return empty string for render
                     {
@@ -142,6 +159,7 @@
                     {"data": "performer"},
                     {"data": "song"}
                 ],
+
                 "ordering": false,
                 "scrollY": "70vh",
                 "scrollCollapse": true,
@@ -211,7 +229,6 @@
                 var songName = data.artist + ' - ' + data.title;
                 var curPerformer = $('#performer').val();
                 performer = curPerformer;
-                console.log($('input[name=actionType]').val())
                 switch ($('input[name=actionType]:checked').val()) {
 
                     case "add":
@@ -224,6 +241,8 @@
                         sendMessage({"playNext": [curPerformer, songName, data.songID]});
                         break;
                 }
+                // Reset selection back to "Add to playlist"
+                $('input[name=actionType][value=add]').prop('checked', true);
                 $('#addToPlaylistDialog').modal('hide');
             });
 
@@ -234,7 +253,6 @@
             });
 
             $('#submitPassword').on("click", function() {
-                console.log("submit clicked");
                 sendMessage({'submitPassword': [
                    $('#passwordInput').val()
                 ]});
@@ -293,6 +311,8 @@
                         <tr>
                             <th>Artist</th>
                             <th>Title</th>
+                            <th></th>
+                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -351,6 +371,7 @@
             </div>
             <div class="modal-body">
                 <div class="form-group adminOnly">
+                    <label>Select Action</label>
                     <div class="radio">
                         <label><input type="radio" name="actionType" value="add" checked>Add to
                             Playlist</label>

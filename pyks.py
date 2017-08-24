@@ -496,7 +496,6 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.karaokeServerState == KaraokeServer.ON:
             self.karaokeServer.stopServer()
         else:
-            print (self.settings.hostPort)
             result = self.karaokeServer.startServer(
                 QtNetwork.QHostAddress(self.settings.hostAddress),
                 self.settings.hostPort)
