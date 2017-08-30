@@ -14,7 +14,7 @@
    <enum>Qt::StrongFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>PyKaraokeServer</string>
+   <string>PyKS</string>
   </property>
   <property name="windowIcon">
    <iconset>

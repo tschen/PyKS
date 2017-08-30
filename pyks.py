@@ -235,11 +235,10 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.cdgPlayer = CdgPlayer()
         # Play next song (if there is one) when we reach the end of the
         # current song
-        self.cdgPlayer.endOfMedia.connect(self.next)
+        self.cdgPlayer.endOfMedia.connect(self.processEndOfMedia)
 
         # KaraokeServer
-        self.karaokeServer = KaraokeServer (self.songbookJSON,
-                                            self.settings.adminPassword)
+        self.karaokeServer = KaraokeServer (self.songbookJSON)
         self.karaokeServerState = KaraokeServer.OFF
         # Set up a QLabel on the toolbar. We will replace the text of the label
         # whenever we toggle the server's state.
@@ -261,17 +260,20 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.settings.serverOnStartup:
             result = self.karaokeServer.startServer(
                 QtNetwork.QHostAddress(self.settings.hostAddress),
-                self.settings.hostPort)
+                self.settings.hostPort, self.settings.maxConnectedClients,
+                self.settings.allowMultipleConnections,
+                self.settings.adminPassword)
             if not result:
-                alert = AlertDialog("Karaoke Server Error", "Could not start "
-                                                            "Karaoke Server "
-                                                            "on %s:%d" %
+                alert = AlertDialog("Karaoke Server Error",
+                                    "Could not start Karaoke Server on %s:%d" %
                                     (self.settings.hostAddress,
                                     self.settings.hostPort))
                 alert.exec()
                 # If we fail to connect on startup, set the server toggle
                 # icon to serverOffIcon
                 self.processServerStateChanged(KaraokeServer.OFF)
+        else: # Set the server toggle icon to serverOffIcon
+            self.processServerStateChanged(KaraokeServer.OFF)
 
         self.karaokeServer.addToPlaylist.connect(self.appendToPlaylist)
         self.karaokeServer.play.connect(self.play)
@@ -332,6 +334,19 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot()
     def stop(self):
         self.cdgPlayer.stop()
+
+
+    @QtCore.pyqtSlot()
+    def processEndOfMedia(self):
+        # if secondsToWait = -1, don't go to the next song. Otherwise,
+        # set a timer to wait settings.secondsToWait seconds before playing the
+        # next song.
+        if self.settings.secondsToWait > 0:
+            timer = QtCore.QTimer(self)
+            timer.timeout.connect(self.next)
+            timer.setSingleShot(True)
+            # Convert seconds to milliseconds
+            timer.start(self.settings.secondsToWait * 1000)
 
 
     @QtCore.pyqtSlot()
@@ -440,7 +455,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot()
     def processSearch(self):
         # Grab search text and query the database for results
-        text = self.searchLineEdit.text()
+        text = self.searchLineEdit.text().strip()
 
         query = QtSql.QSqlQuery()
         query.prepare(
@@ -498,7 +513,9 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             result = self.karaokeServer.startServer(
                 QtNetwork.QHostAddress(self.settings.hostAddress),
-                self.settings.hostPort)
+                self.settings.hostPort, self.settings.maxConnectedClients,
+                self.settings.allowMultipleConnections,
+                self.settings.adminPassword)
             if not result:
                 alert = AlertDialog("Karaoke Server Error", "Could not start "
                                                             "Karaoke Server "
@@ -557,9 +574,6 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             else: # Toggle to performer mode
                 self.playlistTableView.showColumn(PlaylistModel.PERF_COL)
 
-        if newSettings.adminPassword != self.settings.adminPassword:
-            self.karaokeServer.updatePassword(newSettings.adminPassword)
-
         if set(newSettings.searchFolders) != set (self.settings.searchFolders):
             self._createSongbook(newSettings.searchFolders)
             self.sqlQueryModel.setQuery \
@@ -568,6 +582,23 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             # Keep fetching until all rows are fetched
             while (self.sqlQueryModel.canFetchMore()):
                 self.sqlQueryModel.fetchMore()
+
+        # If any server settings change and the server is serving, alert the
+        # user that they need to reset the server for the new settings to be
+        # used.
+        if (self.karaokeServerState == KaraokeServer.ON
+            and (newSettings.hostAddress != self.settings.hostAddress
+                 or newSettings.hostPort != self.settings.hostPort
+                 or newSettings.adminPassword != self.settings.adminPassword
+                 or newSettings.allowMultipleConnections !=
+                    self.settings.allowMultipleConnections
+                 or newSettings.maxConnectedClients !=
+                    self.settings.maxConnectedClients)):
+            alert = AlertDialog("New Server Settings Detected",
+                                "Toggle the server off and on "
+                                "to use the new settings")
+            alert.exec()
+
 
         self.settings = newSettings
         # Write out new settings

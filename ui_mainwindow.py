@@ -177,7 +177,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "PyKaraokeServer"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "PyKS"))
         self.SearchLabel.setText(_translate("MainWindow", "Search"))
         self.menu_File.setTitle(_translate("MainWindow", "&File"))
         self.label_2.setText(_translate("MainWindow", "Playlist"))

@@ -101,6 +101,7 @@ class Settings (object):
     DEFAULT_HOST_ADDRESS = "0.0.0.0"
     DEFAULT_HOST_PORT = 0
     DEFAULT_ADMIN_PASSWORD = "password"
+    DEFAULT_ALLOW_MULTIPLE_CONNECTIONS = False
     DEFAULT_MAX_CONNECTED_CLIENTS = -1
 
     DEFAULT_SEARCH_FOLDERS = []
@@ -112,6 +113,7 @@ class Settings (object):
                  hostPort=DEFAULT_HOST_PORT,
                  adminPassword=DEFAULT_ADMIN_PASSWORD,
                  maxConnectedClients=DEFAULT_MAX_CONNECTED_CLIENTS,
+                 allowMultipleConnections = DEFAULT_ALLOW_MULTIPLE_CONNECTIONS,
                  searchFolders=DEFAULT_SEARCH_FOLDERS):
 
         # General Settings
@@ -123,6 +125,7 @@ class Settings (object):
         self.hostAddress = hostAddress
         self.hostPort = hostPort
         self.adminPassword = adminPassword
+        self.allowMultipleConnections = allowMultipleConnections
         self.maxConnectedClients = maxConnectedClients
 
         # Database settings
@@ -187,6 +190,13 @@ class Settings (object):
                 settings.adminPassword = Settings.DEFAULT_ADMIN_PASSWORD
 
             try:
+                settings.allowMultipleConnections = \
+                    config.getboolean('Server', 'AllowMultipleConnections')
+            except:
+                settings.allowMultipleConnections = \
+                    Settings.DEFAULT_ALLOW_MULTIPLE_CONNECTIONS
+
+            try:
                 settings.maxConnectedClients = \
                     config.getint('Server', 'MaxConnectedClients')
             except:
@@ -226,6 +236,8 @@ class Settings (object):
                             'HostAddress': newSettings.hostAddress,
                             'HostPort': newSettings.hostPort,
                             'AdminPassword': newSettings.adminPassword,
+                            'AllowMultpleConnections':
+                                newSettings.allowMultipleConnections,
                             'MaxConnectedClients':
                                 newSettings.maxConnectedClients}
 
@@ -264,6 +276,9 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
         self.hostAddressTextBox.setText(curSettings.hostAddress)
         self.hostPortTextBox.setText(str(curSettings.hostPort))
         self.serverOnStartupCheckBox.setChecked(curSettings.serverOnStartup)
+        self.adminPasswordTextBox.setText(curSettings.adminPassword)
+        self.allowMultipleConnectionsCheckBox.setChecked(
+            curSettings.allowMultipleConnections)
         self.maxConnectedClientsTextBox.setText(
             str(curSettings.maxConnectedClients))
         self.autoDetectButton.clicked.connect(self.autoDetectNetworkInterface)
@@ -288,6 +303,9 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
         self.newSettings.hostPort = int (self.hostPortTextBox.text())
         self.newSettings.serverOnStartup = \
             self.serverOnStartupCheckBox.isChecked()
+        self.newSettings.adminPassword = self.adminPasswordTextBox.text()
+        self.newSettings.allowMultipleConnections = \
+            self.allowMultipleConnectionsCheckBox.isChecked()
         self.newSettings.maxConnectedClients = int (
             self.maxConnectedClientsTextBox.text())
 

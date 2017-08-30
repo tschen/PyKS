@@ -137,12 +137,14 @@ class KaraokeServer(QtCore.QObject):
     OFF = 0
     ON = 1
 
-    def __init__(self, songbook="", password="", parent=None):
+    def __init__(self, songbook="", parent=None):
         super (KaraokeServer, self).__init__(parent)
 
         self.songbook = songbook
-        self.password = password
+        self.password = ""
         self.playlist = []
+
+        self.maxConnectedClients = 0
 
         # The KaraokeServer consists of a WebSocketServer and a WebServer.
         self.webSocketServer = QtWebSockets.QWebSocketServer(
@@ -166,10 +168,12 @@ class KaraokeServer(QtCore.QObject):
         self.clients = {}
         self.admins = set()
 
-    def startServer(self, hostAddress, hostPort):
+    def startServer(self, hostAddress, hostPort, maxConnectedClients,
+                    allowMultipleConnections, password):
         # If we can't start the webSocketServer, return False
         if not self.webSocketServer.listen(hostAddress):
             return False
+
         self.webSocketServer.newConnection.connect(self.processNewConnection)
 
         if not self.webServer.startServer(hostAddress, hostPort):
@@ -190,6 +194,11 @@ class KaraokeServer(QtCore.QObject):
         self.webServer.addResource(webAppName, bytes(webAppData, 'UTF-8'))
         self.serverStateChanged.emit(self.ON)
         f.close()
+
+        # Save server settings
+        self.maxConnectedClients = maxConnectedClients
+        self.allowMultipleConnections = allowMultipleConnections
+        self.password = password
         return True
 
 
@@ -212,11 +221,6 @@ class KaraokeServer(QtCore.QObject):
 
 
     @QtCore.pyqtSlot('QString')
-    def updatePassword(self, password):
-        self.password = password
-
-
-    @QtCore.pyqtSlot('QString')
     def updateSongbook(self, songbook):
         self.songbook = songbook
 
@@ -225,15 +229,34 @@ class KaraokeServer(QtCore.QObject):
     def processNewConnection(self):
         while (self.webSocketServer.hasPendingConnections()):
             socket = self.webSocketServer.nextPendingConnection()
-            socket.textMessageReceived.connect(self.processTextMessage)
-            socket.disconnected.connect(self.processClientDisconnect)
+            if (self.maxConnectedClients < 0
+                or len(self.clients) < self.maxConnectedClients):
+                socket.textMessageReceived.connect(self.processTextMessage)
+                socket.disconnected.connect(self.processClientDisconnect)
 
-            # A client can connect to the server through different browser
-            # tabs, so use both the IP address and port as the key
-            socketKey = socket.peerAddress().toString() \
-                        + ":" \
-                        + str(socket.peerPort())
-            self.clients[socketKey] = socket
+                if self.allowMultipleConnections:
+                    # If we allow multiple connections from the same client,
+                    # we use the IP address concatenated with the port as the
+                    #  socket key becuase a client can connect to the server
+                    # through different browsers/browser tabs. Otherwise,
+                    # we just use the IP address and don't allow the
+                    # connection if a connection with the client already
+                    # exists.
+                    socketKey = socket.peerAddress().toString() \
+                                + ":" \
+                                + str(socket.peerPort())
+                else:
+                    socketKey = socket.peerAddress().toString()
+                if not socketKey in self.clients:
+                    self.clients[socketKey] = socket
+                else:
+                    socket.close(
+                        QtWebSockets.QWebSocketProtocol.CloseCodeNormal,
+                        "Only a single connection is allowed")
+            else:
+                # Close the socket with an error message
+                socket.close(QtWebSockets.QWebSocketProtocol.CloseCodeNormal,
+                             "Too many clients connected")
 
 
     @QtCore.pyqtSlot()
