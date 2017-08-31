@@ -81,13 +81,17 @@ class PlaylistModel (QtCore.QAbstractTableModel):
         self.endInsertRows()
         self.playlistUpdated.emit(self.playlist)
 
+    def removeSongs(self, songPostions):
+        numRemoved = 0
 
-    def removeSong(self, position):
-        self.beginRemoveRows(QtCore.QModelIndex(), position, position)
-        del (self.playlist[position])
-        self.endRemoveRows()
+        for pos in songPostions:
+            pos = pos - numRemoved
+            self.beginRemoveRows(QtCore.QModelIndex(), pos, pos)
+            del (self.playlist[pos])
+            self.endRemoveRows()
+            numRemoved += 1
+
         self.playlistUpdated.emit(self.playlist)
-
 
     def getCurSong(self):
         if len(self.playlist):
@@ -98,7 +102,7 @@ class PlaylistModel (QtCore.QAbstractTableModel):
 
     def getNextSong(self):
         if len (self.playlist):
-            self.removeSong(0)
+            self.removeSongs([0])
             return self.getCurSong()
 
 
@@ -290,7 +294,6 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Number of active lyrics windows being displayed
         self.numLyricsWindows = 0
 
-
     ###### Slots
     @QtCore.pyqtSlot()
     def play(self):
@@ -322,7 +325,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                                     songName)
                 alert.exec()
                 # Remove the song from the list
-                self.playlistModel.removeSong(0)
+                self.playlistModel.removeSongs([0])
                 return
 
             if isPlaying:
@@ -341,7 +344,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # if secondsToWait = -1, don't go to the next song. Otherwise,
         # set a timer to wait settings.secondsToWait seconds before playing the
         # next song.
-        if self.settings.secondsToWait > 0:
+        if self.settings.secondsToWait >= 0:
             timer = QtCore.QTimer(self)
             timer.timeout.connect(self.next)
             timer.setSingleShot(True)
@@ -647,9 +650,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # We remove songs in ascending order because with each song removed
         # the index of the next song to remove decrements by 1
         rows.sort()
-        for modelIndex in rows:
-            self.playlistModel.removeSong(modelIndex.row() - numRemoved)
-            numRemoved += 1
+        self.playlistModel.removeSongs(
+            [modelIndex.row() for modelIndex in rows])
 
 
     def _createSongbook (self, searchFolders):

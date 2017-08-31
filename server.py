@@ -252,21 +252,25 @@ class KaraokeServer(QtCore.QObject):
                 else:
                     socket.close(
                         QtWebSockets.QWebSocketProtocol.CloseCodeNormal,
-                        "Only a single connection is allowed")
+                        "Only a single connection to the server is allowed!")
             else:
                 # Close the socket with an error message
                 socket.close(QtWebSockets.QWebSocketProtocol.CloseCodeNormal,
-                             "Too many clients connected")
+                             "Too many clients connected!")
 
 
     @QtCore.pyqtSlot()
     def processClientDisconnect(self):
         socket = self.sender()
-        socketKey = socket.peerAddress().toString() \
+        if self.allowMultipleConnections:
+            socketKey = socket.peerAddress().toString() \
                     + ":" \
                     + str(socket.peerPort())
+        else:
+            socketKey = socket.peerAddress().toString()
         if socketKey in self.clients:
-            del self.clients[socketKey]
+            if socket == self.clients[socketKey]:
+                del self.clients[socketKey]
         if socketKey in self.admins:
             self.admins.remove(socketKey)
 

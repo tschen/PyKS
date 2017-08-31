@@ -50,7 +50,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="searchLineEdit">
+       <widget class="SearchBox" name="searchLineEdit">
         <property name="font">
          <font>
           <pointsize>10</pointsize>
@@ -352,6 +352,11 @@
   <customwidget>
    <class>PlaylistTableView</class>
    <extends>QTableView</extends>
+   <header>widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>SearchBox</class>
+   <extends>QLineEdit</extends>
    <header>widgets</header>
   </customwidget>
  </customwidgets>

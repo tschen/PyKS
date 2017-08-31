@@ -36,7 +36,7 @@ class Ui_MainWindow(object):
         self.SearchLabel.setFont(font)
         self.SearchLabel.setObjectName("SearchLabel")
         self.horizontalLayout.addWidget(self.SearchLabel)
-        self.searchLineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.searchLineEdit = SearchBox(self.centralwidget)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.searchLineEdit.setFont(font)
@@ -195,4 +195,4 @@ class Ui_MainWindow(object):
         self.actionMenuNewScreen.setText(_translate("MainWindow", "New Lyrics Window"))
         self.actionToggleServer.setText(_translate("MainWindow", "toggleServer"))
 
-from widgets import PlaylistTableView
+from widgets import PlaylistTableView, SearchBox

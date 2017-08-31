@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>PyKaraokeServer</title>
 
@@ -56,12 +56,20 @@
                 websocket.onopen = loadTable;
 
                 websocket.onclose = function (evt) {
-                    $('#alertDialogMsg').text("Connection to server was lost!");
+                    var alertText = "Lost connection with server!"
+                    if (evt.reason != "") {
+                        alertText = evt.reason;
+                    }
+                    $('#alertDialogMsg').text(alertText);
                     $('#alertDialog').modal('show');
                 };
 
                 websocket.onerror = function (evt) {
-                    $('#alertDialogMsg').text("Connection to server was lost!");
+                    var alertText = "Lost connection with server!"
+                    if (evt.reason != "") {
+                        alertText = evt.reason;
+                    }
+                    $('#alertDialogMsg').text(alertText);
                     $('#alertDialog').modal('show');
                 };
 
@@ -77,18 +85,23 @@
                             break;
                         case "updatePlaylist":
                             var playlistTable = $('#playlistTable').DataTable();
+                            // Save the scroll position of the table
+                            var scrollPos = $("div.dataTables_scrollBody:last").scrollTop();
                             playlistTable.clear().draw();
                             if (args.response.data.length > 0) {
                                 playlistTable.rows.add(args.response.data).draw()
                             }
                             $.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
                             $.fn.dataTable.tables({visible: true, api: true}).scroller.measure();
+                            // restore the scroll position of the table
+                            if (args.response.data.length > 0)
+                                $("div.dataTables_scrollBody:last").scrollTop(scrollPos);
                             break;
                         case "submitPassword":
                             if (args.response) {
                                 $('.adminOnly').show()
                             } else {
-                                $('#alertDialogMsg').text("Password was incorrect!");
+                                $('#alertDialogMsg').text("Wrong password!");
                                 $('#alertDialog').modal('show');
                             }
                     }
@@ -137,7 +150,8 @@
                 "info": false,
                 "scroller": true,
                 "language": {
-                    "emptyTable": "Sonbook is empty"
+                    "emptyTable": "Songbook is empty",
+                    "zeroRecords": "No songs found"
                 }
             });
 
@@ -224,7 +238,7 @@
             });
 
 
-            $('#addToPlaylistDialog_add').on("click", function () {
+            $('#confirmAddToPlaylist').on("click", function () {
                 var data = $.data($('#addToPlaylistDialog')[0], "data");
                 var songName = data.artist + ' - ' + data.title;
                 var curPerformer = $('#performer').val();
@@ -254,7 +268,7 @@
 
             $('#submitPassword').on("click", function() {
                 sendMessage({'submitPassword': [
-                   $('#passwordInput').val()
+                    $('#passwordInput').val()
                 ]});
                 $('#unlockAdminDialog').modal('toggle');
             });
@@ -271,6 +285,28 @@
             $('#nextSongButton').on("click", function () {
                 sendMessage({"nextSong": []});
             });
+
+            $('#alertForm').submit(function(event) {
+                console.log("alert submit");
+                event.preventDefault();
+            });
+
+            // If ENTER is presssed and a dialog is open, accept the dialog
+            $('body').on('keydown', function (event) {
+                if (event.keyCode === 13) { // ENTER was pressed
+                    if ($('#alertDialog').hasClass('in')) {
+                        $('#alertConfirm').trigger('click');
+                    }
+
+                    if ($('#unlockAdminDialog').hasClass('in')) {
+                        $('#submitPassword').trigger('click');
+                    }
+
+                    if ($('#addToPlaylistDialog').hasClass('in')) {
+                        $('#confirmAddToPlaylist').trigger('click');
+                    }
+                }
+            });
         }
 
     </script>
@@ -281,8 +317,6 @@
             text-align: center;
             font-size: 20px;
         }
-
-
     </style>
 </head>
 <body>
@@ -395,7 +429,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" id="addToPlaylistDialog_add" class="btn btn-primary">Ok
+                <button type="button" id="confirmAddToPlaylist" class="btn btn-primary">Ok
                 </button>
             </div>
         </div>
@@ -417,7 +451,8 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
                     </button>
-                    <button type="button" id="submitPassword" class="btn btn-primary">Ok</button>
+                    <button type="button" id="submitPassword" class="btn btn-primary">Ok
+                    </button>
                 </div>
             </div>
         </div>
@@ -435,7 +470,9 @@
                 <span id="alertDialogMsg"></span>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+                <button type="button" id="alertConfirm" class="btn btn-primary"
+                        data-dismiss="modal">Ok
+                </button>
             </div>
         </div>
     </div>

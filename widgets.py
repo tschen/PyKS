@@ -405,3 +405,50 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
         for i in range (self.searchFolderList.count()):
             searchFolders.append(self.searchFolderList.item(i).data(0))
         self.updateDatabaseClicked.emit(searchFolders)
+
+
+# Adapted from
+# https://stackoverflow.com/questions/21232224/qlineedit-with-custom-button
+class SearchBox(QtWidgets.QLineEdit):
+    def __init__(self, parent=None):
+        super(SearchBox, self).__init__(parent)
+
+        self.clearButton = QtWidgets.QToolButton(self)
+        pixmap = QtGui.QPixmap("images/clear.png")
+
+        self.clearButton.setIcon(QtGui.QIcon(pixmap))
+        self.clearButton.setIconSize(pixmap.size()/1.5)
+        self.clearButton.setCursor(QtCore.Qt.ArrowCursor)
+        self.clearButton.setStyleSheet(
+            "QToolButton {border: none; padding: 0px;}")
+        self.clearButton.hide()
+
+        self.clearButton.clicked.connect(self.clear)
+        self.textChanged.connect(self.updateCloseButton)
+
+        frameWidth = self.style().pixelMetric(
+            QtWidgets.QStyle.PM_DefaultFrameWidth)
+        self.setStyleSheet("QLineEdit { padding-right: %dpx; }" %
+                           (self.clearButton.sizeHint().width()
+                            + frameWidth + 1))
+        msz = self.minimumSizeHint()
+        self.setMinimumSize(max(msz.width(),
+                                self.clearButton.sizeHint().height()
+                                + frameWidth * 2 + 2),
+                            max(msz.height(),
+                                self.clearButton.sizeHint().height()
+                                + frameWidth * 2 + 2))
+
+    def resizeEvent(self, event):
+        sz = self.clearButton.sizeHint()
+        frameWidth = self.style().pixelMetric(
+            QtWidgets.QStyle.PM_DefaultFrameWidth)
+        self.clearButton.move(self.rect().right() - frameWidth - sz.width(),
+                              (self.rect().bottom() + 1 - sz.height())/2)
+
+
+    def updateCloseButton(self, text):
+        if not self.text():
+            self.clearButton.setVisible(False)
+        else:
+            self.clearButton.setVisible(True)
