@@ -297,16 +297,16 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
     def accept(self):
         # On accept, save all the new settings
         self.newSettings.performerMode = self.performerModeCheckBox.isChecked()
-        self.newSettings.secondsToWait = self.secondsToWaitTextBox.text()
+        self.newSettings.secondsToWait = int(self.secondsToWaitTextBox.text())
 
         self.newSettings.hostAddress = self.hostAddressTextBox.text()
-        self.newSettings.hostPort = int (self.hostPortTextBox.text())
+        self.newSettings.hostPort = int(self.hostPortTextBox.text())
         self.newSettings.serverOnStartup = \
             self.serverOnStartupCheckBox.isChecked()
         self.newSettings.adminPassword = self.adminPasswordTextBox.text()
         self.newSettings.allowMultipleConnections = \
             self.allowMultipleConnectionsCheckBox.isChecked()
-        self.newSettings.maxConnectedClients = int (
+        self.newSettings.maxConnectedClients = int(
             self.maxConnectedClientsTextBox.text())
 
         self.newSettings.searchFolders = []

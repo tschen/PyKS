@@ -109,7 +109,7 @@ class PlaylistModel (QtCore.QAbstractTableModel):
 class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     SETTINGS_FILE = 'pyks.ini'
     SONGBOOK_DB_FILE = 'songbook.db'
-    SONGBOOK_JSON_FILE = 'sonbook.json'
+    SONGBOOK_JSON_FILE = 'songbook.json'
 
     NUM_COLS = 3
     ARTIST_COL = 0
@@ -566,7 +566,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.settings.searchFolders = searchFolders
         Settings.writeSettings(self.settings, self.SETTINGS_FILE)
-        self.karaokeServer.setSongbook(self.songbookJSON)
+        self.karaokeServer.updateSongbook(self.songbookJSON)
 
 
     def _processNewSettings (self, newSettings):
@@ -672,6 +672,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         #            artistNoPunc, "titleNoPunc": titleNoPunc, "songID": id},...
         #           ]}
         self.songbookJSON = []
+        f = open(self.SONGBOOK_JSON_FILE, 'w')
 
         # We scan through the folders and store mp3 files we find in the
         # mp3Files dictionary as
@@ -764,6 +765,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                 progressDialog.setValue(i)
                 progressDialog.setLabelText\
                     ("Processing file number %d of %d" % (i, totalFiles))
+                progressDialog.setMinimumWidth(300)
                 QtCore.QCoreApplication.processEvents()
             # Once all song insertions have been executed, commit the
             # transactions and close the database.
@@ -794,6 +796,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                 except:
                     return
             self.songbookUpdated.emit(self.songbookJSON)
+        f.close()
 
 
     def _addSongToDB (self, artistTitle, mp3FilePath, cdgFilePath):

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.9
+# Created by: PyQt5 UI code generator 5.8.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(873, 552)
+        MainWindow.resize(873, 570)
         MainWindow.setFocusPolicy(QtCore.Qt.StrongFocus)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("images/icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -48,7 +48,6 @@ class Ui_MainWindow(object):
         font.setPointSize(11)
         self.searchResultsTableView.setFont(font)
         self.searchResultsTableView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.searchResultsTableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.searchResultsTableView.setAlternatingRowColors(True)
         self.searchResultsTableView.setShowGrid(False)
         self.searchResultsTableView.setSortingEnabled(True)
@@ -56,7 +55,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.searchResultsTableView)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 873, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 873, 22))
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
@@ -65,7 +64,7 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.dockWidget = QtWidgets.QDockWidget(MainWindow)
-        self.dockWidget.setMinimumSize(QtCore.QSize(300, 477))
+        self.dockWidget.setMinimumSize(QtCore.QSize(300, 484))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         self.dockWidget.setFont(font)
@@ -104,7 +103,6 @@ class Ui_MainWindow(object):
         self.playlistTableView.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.playlistTableView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.playlistTableView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.playlistTableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.playlistTableView.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
         self.playlistTableView.setDefaultDropAction(QtCore.Qt.CopyAction)
         self.playlistTableView.setAlternatingRowColors(True)
@@ -115,7 +113,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.playButton = QtWidgets.QPushButton(self.dockWidgetContents)
-        self.playButton.setToolTipDuration(-1)
         self.playButton.setText("")
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap("images/play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -124,6 +121,7 @@ class Ui_MainWindow(object):
         self.playButton.setChecked(False)
         self.playButton.setAutoRepeat(False)
         self.playButton.setAutoDefault(False)
+        self.playButton.setProperty("toolTipDuration", -1)
         self.playButton.setObjectName("playButton")
         self.horizontalLayout_2.addWidget(self.playButton)
         self.stopButton = QtWidgets.QPushButton(self.dockWidgetContents)
@@ -188,11 +186,11 @@ class Ui_MainWindow(object):
         self.nextButton.setToolTip(_translate("MainWindow", "Next song"))
         self.nextButton.setShortcut(_translate("MainWindow", "Ctrl+N"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
-        self.actionMenuQuit.setText(_translate("MainWindow", "&Quit"))
+        self.actionMenuQuit.setText(_translate("MainWindow", " &Quit"))
         self.actionNewScreen.setToolTip(_translate("MainWindow", "New screen"))
         self.actionNewScreen.setShortcut(_translate("MainWindow", "Ctrl+O"))
-        self.actionMenuSettings.setText(_translate("MainWindow", "&Settings..."))
-        self.actionMenuNewScreen.setText(_translate("MainWindow", "New Lyrics Window"))
+        self.actionMenuSettings.setText(_translate("MainWindow", " &Settings..."))
+        self.actionMenuNewScreen.setText(_translate("MainWindow", " New Lyrics Window"))
         self.actionToggleServer.setText(_translate("MainWindow", "toggleServer"))
 
 from widgets import PlaylistTableView, SearchBox

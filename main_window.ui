@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>873</width>
-    <height>552</height>
+    <height>570</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -70,9 +70,6 @@
       <property name="contextMenuPolicy">
        <enum>Qt::CustomContextMenu</enum>
       </property>
-      <property name="sizeAdjustPolicy">
-       <enum>QAbstractScrollArea::AdjustToContents</enum>
-      </property>
       <property name="alternatingRowColors">
        <bool>true</bool>
       </property>
@@ -92,7 +89,7 @@
      <x>0</x>
      <y>0</y>
      <width>873</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -111,7 +108,7 @@
    <property name="minimumSize">
     <size>
      <width>300</width>
-     <height>477</height>
+     <height>484</height>
     </size>
    </property>
    <property name="font">
@@ -143,16 +140,7 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_2">
-     <property name="leftMargin">
-      <number>10</number>
-     </property>
-     <property name="topMargin">
-      <number>10</number>
-     </property>
-     <property name="rightMargin">
-      <number>10</number>
-     </property>
-     <property name="bottomMargin">
+     <property name="margin">
       <number>10</number>
      </property>
      <item>
@@ -199,9 +187,6 @@
        <property name="horizontalScrollBarPolicy">
         <enum>Qt::ScrollBarAsNeeded</enum>
        </property>
-       <property name="sizeAdjustPolicy">
-        <enum>QAbstractScrollArea::AdjustIgnored</enum>
-       </property>
        <property name="dragDropMode">
         <enum>QAbstractItemView::DragDrop</enum>
        </property>
@@ -226,9 +211,6 @@
          <property name="toolTip">
           <string>Play</string>
          </property>
-         <property name="toolTipDuration">
-          <number>-1</number>
-         </property>
          <property name="text">
           <string/>
          </property>
@@ -250,6 +232,9 @@
          </property>
          <property name="autoDefault">
           <bool>false</bool>
+         </property>
+         <property name="toolTipDuration" stdset="0">
+          <number>-1</number>
          </property>
         </widget>
        </item>
@@ -314,7 +299,7 @@
   </widget>
   <action name="actionMenuQuit">
    <property name="text">
-    <string>&amp;Quit</string>
+    <string> &amp;Quit</string>
    </property>
   </action>
   <action name="actionNewScreen">
@@ -334,12 +319,12 @@
   </action>
   <action name="actionMenuSettings">
    <property name="text">
-    <string>&amp;Settings...</string>
+    <string> &amp;Settings...</string>
    </property>
   </action>
   <action name="actionMenuNewScreen">
    <property name="text">
-    <string>New Lyrics Window</string>
+    <string> New Lyrics Window</string>
    </property>
   </action>
   <action name="actionToggleServer">
