@@ -4,7 +4,7 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>PyKaraokeServer</title>
+    <title>PyKS</title>
 
     <link rel="stylesheet" type="text/css"
           href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css">
@@ -82,6 +82,8 @@
                             break;
                         case "getPlaylist":
                             getPlaylistCallback(args.response);
+                            $.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
+                            $.fn.dataTable.tables({visible: true, api: true}).scroller.measure();
                             break;
                         case "updatePlaylist":
                             var playlistTable = $('#playlistTable').DataTable();
@@ -151,7 +153,8 @@
                 "scroller": true,
                 "language": {
                     "emptyTable": "Songbook is empty",
-                    "zeroRecords": "No songs found"
+                    "zeroRecords": "No songs found",
+                    "loadingRecords": "Loading..."
                 }
             });
 
@@ -263,7 +266,7 @@
 
             // Admin unlock
             $('#unlock').on("click", function() {
-               $('#unlockAdminDialog').modal('toggle');
+                $('#unlockAdminDialog').modal('toggle');
             });
 
             $('#submitPassword').on("click", function() {
@@ -284,11 +287,6 @@
 
             $('#nextSongButton').on("click", function () {
                 sendMessage({"nextSong": []});
-            });
-
-            $('#alertForm').submit(function(event) {
-                console.log("alert submit");
-                event.preventDefault();
             });
 
             // If ENTER is presssed and a dialog is open, accept the dialog

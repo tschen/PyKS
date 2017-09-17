@@ -1,11 +1,10 @@
 # PyQt5 imports
-from PyQt5 import QtCore, QtNetwork, QtWebSockets, QtWidgets #REMOVE WIDGETS
+from PyQt5 import QtCore, QtNetwork, QtWebSockets
 
 # Python3 std lib imports
 import collections
 import json
 import os
-import sys #REMOE
 import time
 
 from http_utils import SimpleHTTPParser
@@ -366,15 +365,3 @@ class KaraokeServer(QtCore.QObject):
                 self.admins.add(socketKey)
                 response["response"] = True
         socket.sendTextMessage(json.dumps(response))
-
-
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    server = KaraokeServer()
-    if not server.startServer(QtNetwork.QHostAddress('192.168.1.2'), 80):
-        print ("could not listen")
-    return app.exec_()
-
-if __name__ == '__main__':
-    main()
-

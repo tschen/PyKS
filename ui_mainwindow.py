@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.8.1
+# Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -55,7 +55,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.searchResultsTableView)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 873, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 873, 21))
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
@@ -73,7 +73,7 @@ class Ui_MainWindow(object):
         self.dockWidget.setWindowIcon(icon)
         self.dockWidget.setFloating(False)
         self.dockWidget.setFeatures(QtWidgets.QDockWidget.DockWidgetFloatable|QtWidgets.QDockWidget.DockWidgetMovable)
-        self.dockWidget.setWindowTitle("")
+        self.dockWidget.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
         self.dockWidget.setObjectName("dockWidget")
         self.dockWidgetContents = QtWidgets.QWidget()
         self.dockWidgetContents.setObjectName("dockWidgetContents")
@@ -113,6 +113,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.playButton = QtWidgets.QPushButton(self.dockWidgetContents)
+        self.playButton.setToolTipDuration(-1)
         self.playButton.setText("")
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap("images/play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -121,7 +122,6 @@ class Ui_MainWindow(object):
         self.playButton.setChecked(False)
         self.playButton.setAutoRepeat(False)
         self.playButton.setAutoDefault(False)
-        self.playButton.setProperty("toolTipDuration", -1)
         self.playButton.setObjectName("playButton")
         self.horizontalLayout_2.addWidget(self.playButton)
         self.stopButton = QtWidgets.QPushButton(self.dockWidgetContents)
@@ -178,6 +178,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "PyKS"))
         self.SearchLabel.setText(_translate("MainWindow", "Search"))
         self.menu_File.setTitle(_translate("MainWindow", "&File"))
+        self.dockWidget.setWindowTitle(_translate("MainWindow", "PyKS"))
         self.label_2.setText(_translate("MainWindow", "Playlist"))
         self.playButton.setToolTip(_translate("MainWindow", "Play"))
         self.playButton.setShortcut(_translate("MainWindow", "Ctrl+P"))

@@ -81,6 +81,7 @@ class PlaylistModel (QtCore.QAbstractTableModel):
         self.endInsertRows()
         self.playlistUpdated.emit(self.playlist)
 
+
     def removeSongs(self, songPostions):
         numRemoved = 0
 
@@ -92,6 +93,7 @@ class PlaylistModel (QtCore.QAbstractTableModel):
             numRemoved += 1
 
         self.playlistUpdated.emit(self.playlist)
+
 
     def getCurSong(self):
         if len(self.playlist):
@@ -156,7 +158,6 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # The underlying model holding the data displayed by
         # searchResultsListView is a QSqlQueryModel contained in a
         # QSortFilterProxyModel to allow for sorting.
-        #FIXME should this be in its own function?
         self.sqlQueryModel = QtSql.QSqlQueryModel(self)
         self.sqlQueryModel.setQuery\
             ('SELECT artist, title, songID from songs')
@@ -188,6 +189,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.searchResultsTableView.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
         self.searchResultsTableView.resizeColumnsToContents()
+        self.searchResultsTableView.horizontalHeader().setStretchLastSection(
+            True)
         # searchResultsTableView Signal/Slot
         self.searchResultsTableView.activated.connect(self.addToPlaylist)
         self.searchResultsTableView.customContextMenuRequested.connect(
@@ -294,6 +297,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Number of active lyrics windows being displayed
         self.numLyricsWindows = 0
 
+
     ###### Slots
     @QtCore.pyqtSlot()
     def play(self):
@@ -394,12 +398,14 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     def appendToPlaylist(self, songs):
         self.playlistModel.appendSongs(songs)
         self.playlistTableView.resizeColumnsToContents()
+        self.playlistTableView.horizontalHeader().setStretchLastSection(True)
 
 
     @QtCore.pyqtSlot(list, int)
     def insertInPlaylistAt(self, song, position):
         self.playlistModel.insertSongs(position, song)
         self.playlistTableView.resizeColumnsToContents()
+        self.playlistTableView.horizontalHeader().setStretchLastSection(True)
 
 
     def _insertSongAt(self, position):
@@ -481,6 +487,9 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             self.sqlQueryModel.fetchMore()
 
         self.searchResultsTableView.hideColumn(self.SONG_ID_COL)
+        self.searchResultsTableView.resizeColumnsToContents()
+        self.searchResultsTableView.horizontalHeader().setStretchLastSection(
+            True)
 
 
     @QtCore.pyqtSlot()
@@ -563,7 +572,9 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Keep fetching until all rows are fetched
         while (self.sqlQueryModel.canFetchMore()):
             self.sqlQueryModel.fetchMore()
-
+        # Hide Song ID column
+        self.searchResultsTableView.hideColumn(self.SONG_ID_COL)
+        self.searchResultsTableView.resizeColumnsToContents()
         self.settings.searchFolders = searchFolders
         Settings.writeSettings(self.settings, self.SETTINGS_FILE)
         self.karaokeServer.updateSongbook(self.songbookJSON)
@@ -585,6 +596,19 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             # Keep fetching until all rows are fetched
             while (self.sqlQueryModel.canFetchMore()):
                 self.sqlQueryModel.fetchMore()
+            # Hide Song ID column
+            self.searchResultsTableView.hideColumn(self.SONG_ID_COL)
+
+            # Need to set up table again for new content
+            self.searchResultsTableView.resizeColumnsToContents()
+            self.searchResultsTableView.horizontalHeader(
+
+            ).setStretchLastSection(
+                True)
+            self.sortFilterProxyModel.setHeaderData(self.ARTIST_COL,
+                                                QtCore.Qt.Horizontal, 'Artist')
+            self.sortFilterProxyModel.setHeaderData(self.TITLE_COL,
+                                                QtCore.Qt.Horizontal, 'Title')
 
         # If any server settings change and the server is serving, alert the
         # user that they need to reset the server for the new settings to be
@@ -768,15 +792,13 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                 progressDialog.setMinimumWidth(300)
                 QtCore.QCoreApplication.processEvents()
             # Once all song insertions have been executed, commit the
-            # transactions and close the database.
+            # transactions
             self.songbookdb.commit()
 
             self.songbookJSON = {"cmd": "getSongbook",
                                  "response": {"data": self.songbookJSON}}
             self.songbookJSON = json.dumps(self.songbookJSON)
-            f = open(self.SONGBOOK_JSON_FILE, 'w')
             f.write(self.songbookJSON)
-            f.close()
 
             # If there are unmatched songs, write them out to a log file so
             # the user can fix them.
@@ -841,7 +863,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             title = artistTitle
 
         # Create "no punctuation" versions of artistTitle
-        puncPattern = "['|,|.|(|)|-]"
+        puncPattern = "['|`|,|.|(|)|-]"
         artistNoPunc = re.sub(puncPattern, "", artist)
         titleNoPunc = re.sub(puncPattern, "", title)
 

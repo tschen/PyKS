@@ -19,5 +19,5 @@ class Ui_LyricsWindow(object):
 
     def retranslateUi(self, LyricsWindow):
         _translate = QtCore.QCoreApplication.translate
-        LyricsWindow.setWindowTitle(_translate("LyricsWindow", " "))
+        LyricsWindow.setWindowTitle(_translate("LyricsWindow", "PyKS"))
 

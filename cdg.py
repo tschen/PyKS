@@ -73,7 +73,7 @@ class CdgPlayer (QtCore.QObject):
         # We use the QT included Phonon MediaPlayer to play the audio
         self.mediaPlayer = QtMultimedia.QMediaPlayer(self)
         # Set the notify interval to 60 ms. Every 60 ms,
-        # the positionChagned signal will be sent and decodeCdgPackets
+        # the positionChanged signal will be sent and decodeCdgPackets
         # will be called to process another set of CDG packets.
         self.mediaPlayer.setNotifyInterval(60)
         self.mediaPlayer.positionChanged.connect(self.decodeCdgPackets)
@@ -83,7 +83,7 @@ class CdgPlayer (QtCore.QObject):
         # __previousReadTime helps keep track of how much time has elapsed
         # since we processed our last set of packets.
         self.__previousReadTime = 0
-        # __fractionalPacketsToProcess keep track of our rounding error when
+        # __fractionalPacketsToProcess keeps track of our rounding error when
         # processing packets.
         self.__fractionalPacketsToProcess = 0
 
@@ -139,7 +139,7 @@ class CdgPlayer (QtCore.QObject):
         if status == QtMultimedia.QMediaPlayer.EndOfMedia:
             self.endOfMedia.emit()
 
-        # If the file is invalid, just set the background to black
+        # If the file is invalid, just set the background to a solid color
         if status == QtMultimedia.QMediaPlayer.InvalidMedia:
             self.cdgImage.fill(0)
 
@@ -191,6 +191,7 @@ class CdgPlayer (QtCore.QObject):
             numPacketsToProcess -= 1
 
         self.cdgImageUpdated.emit()
+
 
     ##### CDG command processing functions
     # This instruction clears the screen to "color." The command appears in
@@ -307,7 +308,7 @@ class CdgPlayer (QtCore.QObject):
                 # We perform bit operations on only the last 6 bits of tilePixel
                 for i in range (6):
                     # Only set pixels if we are within the CDG window
-                    if y <= CDG_HEIGHT and x <= CDG_WIDTH:
+                    if y < CDG_HEIGHT and x < CDG_WIDTH:
                         # Check if last bit of tilePixel is a 0 or 1. This
                         # determines whether we use color0 or color1
                         if (tilePixel & 0x1):
