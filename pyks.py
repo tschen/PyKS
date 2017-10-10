@@ -164,6 +164,11 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # QSqlQueryModel only fetches 256 rows at a time
         # Keep fetching until all rows are fetched
         while (self.sqlQueryModel.canFetchMore()):
+
+            # This may take several iterations. Process events so we don't
+            # block the main UI.
+            QtCore.QCoreApplication.processEvents()
+
             self.sqlQueryModel.fetchMore()
 
 
@@ -180,7 +185,10 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.searchResultsTableView.setModel(self.sortFilterProxyModel)
         # Hide the first column of row numbers
         self.searchResultsTableView.verticalHeader().setVisible(False)
-        # Initially set sorting to be by artist
+        # First sort by title and then by artist. This ensures that titles from
+        # the same artist are sorted alphabetically.
+        self.searchResultsTableView.sortByColumn(self.TITLE_COL,
+                                                 QtCore.Qt.AscendingOrder)
         self.searchResultsTableView.sortByColumn(self.ARTIST_COL,
                                                  QtCore.Qt.AscendingOrder)
         # Hide Song ID column
@@ -188,7 +196,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Set QTableView selection behavior to select only rows
         self.searchResultsTableView.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
-        self.searchResultsTableView.resizeColumnsToContents()
+        self.searchResultsTableView.resizeColumnToContents(self.ARTIST_COL)
         self.searchResultsTableView.horizontalHeader().setStretchLastSection(
             True)
         # searchResultsTableView Signal/Slot
@@ -215,7 +223,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.playlistModel = PlaylistModel(self)
         self.playlistTableView.setModel(self.playlistModel)
         self.playlistTableView.verticalHeader().setVisible(False)
-        self.playlistTableView.horizontalHeader().setStretchLastSection(True)
+        #self.playlistTableView.horizontalHeader().setStretchLastSection(True)
         # Hide the song ID column
         self.playlistTableView.hideColumn(PlaylistModel.SONG_ID_COL)
         # If we are not in performer mode, hide the performer column
@@ -294,8 +302,10 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             self.karaokeServer.updatePlaylist)
 
 
-        # Number of active lyrics windows being displayed
-        self.numLyricsWindows = 0
+        # Holds all references to open lyrics windows. Since lysics windows
+        # don't have parents, this list keeps them from closing by saving their
+        # reference
+        self.lyricsWindows = []
 
 
     ###### Slots
@@ -334,7 +344,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
             if isPlaying:
                 # If there are no lyrics windows being displayed, open one
-                if self.numLyricsWindows < 1:
+                if len(self.lyricsWindows) < 1:
                     self.showNewLyricsWindow()
 
 
@@ -469,11 +479,11 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         query = QtSql.QSqlQuery()
         query.prepare(
             'SELECT artist, title, songID FROM songs '
-            + 'WHERE LOWER(artistNoPunc) LIKE LOWER(?) '
-            + 'OR LOWER(artist) like LOWER (?)'
-            + 'OR LOWER(titleNoPunc) like LOWER (?)'
-            + 'OR LOWER(title) like LOWER (?) '
-            + 'ORDER BY artist, title COLLATE NOCASE')
+            'WHERE LOWER(artistNoPunc) LIKE LOWER(?) '
+            'OR LOWER(artist) like LOWER (?)'
+            'OR LOWER(titleNoPunc) like LOWER (?)'
+            'OR LOWER(title) like LOWER (?) '
+            'ORDER BY artist, title COLLATE NOCASE')
         query.addBindValue('%' + text + '%')
         query.addBindValue('%' + text + '%')
         query.addBindValue('%' + text + '%')
@@ -484,12 +494,17 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # QSqlQueryModel only fetches 256 rows at a time
         # Keep fetching until all rows are fetched
         while (self.sqlQueryModel.canFetchMore()):
+
+            # This may take several iterations. Process events so we don't
+            # block the main UI.
+            QtCore.QCoreApplication.processEvents()
+
             self.sqlQueryModel.fetchMore()
 
-        self.searchResultsTableView.hideColumn(self.SONG_ID_COL)
-        self.searchResultsTableView.resizeColumnsToContents()
-        self.searchResultsTableView.horizontalHeader().setStretchLastSection(
-            True)
+        #self.searchResultsTableView.hideColumn(self.SONG_ID_COL)
+        #self.searchResultsTableView.resizeColumnToContents(self.ARTIST_COL)
+        #self.searchResultsTableView.horizontalHeader().setStretchLastSection(
+        #    True)
 
 
     @QtCore.pyqtSlot()
@@ -504,17 +519,18 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot()
     def showNewLyricsWindow(self):
-        lyricsWindow = LyricsWindow(self.cdgPlayer, self)
+        lyricsWindow = LyricsWindow(self.cdgPlayer)
         lyricsWindow.closedWindow.connect(self.closeLyricsWindow)
         lyricsWindow.show()
-        self.numLyricsWindows += 1
+        self.lyricsWindows.append(lyricsWindow)
 
 
     @QtCore.pyqtSlot()
     def closeLyricsWindow(self):
-        self.numLyricsWindows -= 1
+        lyricsWindow = self.sender()
+        self.lyricsWindows.remove(lyricsWindow)
         # if there are no more lyrics windows, then stop playback
-        if self.numLyricsWindows < 1:
+        if len(self.lyricsWindows) < 1:
             self.stop()
 
 
@@ -571,6 +587,11 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # QSqlQueryModel only fetches 256 rows at a time
         # Keep fetching until all rows are fetched
         while (self.sqlQueryModel.canFetchMore()):
+
+            # This may take several iterations. Process events so we don't
+            # block the main UI.
+            QtCore.QCoreApplication.processEvents()
+
             self.sqlQueryModel.fetchMore()
         # Hide Song ID column
         self.searchResultsTableView.hideColumn(self.SONG_ID_COL)
@@ -595,6 +616,11 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             # QSqlQueryModel only fetches 256 rows at a time
             # Keep fetching until all rows are fetched
             while (self.sqlQueryModel.canFetchMore()):
+
+                # This may take several iterations. Process events so we don't
+                # block the main UI.
+                QtCore.QCoreApplication.processEvents()
+
                 self.sqlQueryModel.fetchMore()
             # Hide Song ID column
             self.searchResultsTableView.hideColumn(self.SONG_ID_COL)
@@ -682,12 +708,12 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Convert to a set to remove any redundant folders
         searchFolders = set(searchFolders)
 
-        self.songbookdb.exec("DROP TABLE songs")
+        self.songbookdb.exec('DROP TABLE songs')
         self.songbookdb.exec(
-                "CREATE TABLE songs(artist TEXT, artistNoPunc TEXT, "
-                "title TEXT, titleNoPunc TEXT, "
-                "mp3FilePath TEXT, cdgFilePath TEXT, "
-                "songID INTEGER PRIMARY KEY AUTOINCREMENT)")
+                'CREATE TABLE songs(artist TEXT, artistNoPunc TEXT, '
+                'title TEXT, titleNoPunc TEXT, '
+                'mp3FilePath TEXT, cdgFilePath TEXT, '
+                'songID INTEGER PRIMARY KEY AUTOINCREMENT)')
 
         # Create the songbook JSON file
         # The file will have the following structure:
@@ -791,6 +817,10 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                     ("Processing file number %d of %d" % (i, totalFiles))
                 progressDialog.setMinimumWidth(300)
                 QtCore.QCoreApplication.processEvents()
+
+            # Delete the progressDialog
+            progressDialog.deleteLater()
+
             # Once all song insertions have been executed, commit the
             # transactions
             self.songbookdb.commit()
@@ -873,6 +903,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     def closeEvent(self, event):
         # Close the database
         self.songbookdb.close()
+        for lyricsWindow in self.lyricsWindows:
+            lyricsWindow.deleteLater()
 
 
 def main():

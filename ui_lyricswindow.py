@@ -13,6 +13,9 @@ class Ui_LyricsWindow(object):
         LyricsWindow.setObjectName("LyricsWindow")
         LyricsWindow.resize(300, 216)
         LyricsWindow.setMinimumSize(QtCore.QSize(300, 216))
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("images/new_screen.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        LyricsWindow.setWindowIcon(icon)
 
         self.retranslateUi(LyricsWindow)
         QtCore.QMetaObject.connectSlotsByName(LyricsWindow)

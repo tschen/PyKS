@@ -19,6 +19,10 @@
   <property name="windowTitle">
    <string>PyKS</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>images/new_screen.png</normaloff>images/new_screen.png</iconset>
+  </property>
  </widget>
  <resources/>
  <connections/>
