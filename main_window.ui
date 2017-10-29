@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2017 Tim Chen
+
+This file is part of PyKS.
+
+This file may be used under the terms of the GNU General Public License
+version 3.0 as published by the Free Software Foundation and appearing in
+the file LICENSE included in the packaging of this file.  Please review the
+following information to ensure the GNU General Public License version 3.0
+requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+
+This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Public License along with PyKS.
+-->
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -143,16 +158,7 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_2">
-     <property name="leftMargin">
-      <number>10</number>
-     </property>
-     <property name="topMargin">
-      <number>10</number>
-     </property>
-     <property name="rightMargin">
-      <number>10</number>
-     </property>
-     <property name="bottomMargin">
+     <property name="margin">
       <number>10</number>
      </property>
      <item>
@@ -223,9 +229,6 @@
          <property name="toolTip">
           <string>Play</string>
          </property>
-         <property name="toolTipDuration">
-          <number>-1</number>
-         </property>
          <property name="text">
           <string/>
          </property>
@@ -247,6 +250,9 @@
          </property>
          <property name="autoDefault">
           <bool>false</bool>
+         </property>
+         <property name="toolTipDuration" stdset="0">
+          <number>-1</number>
          </property>
         </widget>
        </item>

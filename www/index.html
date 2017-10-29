@@ -1,5 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--
+Copyright (c) 2017 Tim Chen
+
+This file is part of PyKS.
+
+This file may be used under the terms of the GNU General Public License
+version 3.0 as published by the Free Software Foundation and appearing in
+the file LICENSE included in the packaging of this file.  Please review the
+following information to ensure the GNU General Public License version 3.0
+requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+
+This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Public License along with PyKS.
+-->
 <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,48 +44,55 @@
         var websocket = null;
         var getSongbookCallback = null;
         var getPlaylistCallback = null;
-        var performer = "Anon Mouse"
+        var performer = "Anon Mouse";
+        var md5 = "";
 
         $(document).ready(function () {
-            initWebSocket() //Start up websocket when document loads
+            initWebSocket(function() {
+                // Hide reconnect button
+                $('.disconnectedOnly').hide();
+                loadTable();
+            }) //Start up websocket when document loads
 
             // Hide all admin only elements
             $('.adminOnly').hide()
         });
 
-        function initWebSocket() {
+        function initWebSocket(onOpenFunction) {
             try {
                 // Gecko 6.0-10.0 implemments the WebSocket object as MozWebSocket, so if this
                 // browser has MozWebSocket defined, use this obect to create a WebSocket
                 if (typeof MozWebSocket == 'function') {
                     WebSocket = MozWebSocket;
                 }
+
                 // If webSocket is already defined and opened, close it
-                if (websocket && webSocket.websocket == 1) { // 1 -> Open
+                if (websocket && websocket.websocket == 1) { // 1 -> Open
                     websocket.close();
                 }
                 // Creaete a new WebSocket
                 websocket = new WebSocket("ws://{hostAddressPort}");
 
-                // Load DataTables after websocket is established
-                websocket.onopen = loadTable;
+                // Either load the datatable or reconnect and get songbook and playlist
+                websocket.onopen = onOpenFunction;
 
                 websocket.onclose = function (evt) {
-                    var alertText = "Lost connection with server!"
-                    if (evt.reason != "") {
-                        alertText = evt.reason;
-                    }
-                    $('#alertDialogMsg').text(alertText);
-                    $('#alertDialog').modal('show');
-                };
+                    switch(evt.code) {
+                        case 1001: // Server closed connection
+                            alertText =
+                                "Lost connection to the karaoke server!";
+                            break;
+                        case 4000: // Only one connection allowed
+                        case 4001: // Server at capacity
+                            alertText = evt.reason;
+                            break;
+                        default:
+                            alertText = "Could not connect to the karaoke server!";
 
-                websocket.onerror = function (evt) {
-                    var alertText = "Lost connection with server!"
-                    if (evt.reason != "") {
-                        alertText = evt.reason;
                     }
                     $('#alertDialogMsg').text(alertText);
                     $('#alertDialog').modal('show');
+                    $('.disconnectedOnly').show();
                 };
 
                 websocket.onmessage = function (evt) {
@@ -78,9 +100,16 @@
 
                     switch (args.cmd) {
                         case "getSongbook":
-                            getSongbookCallback(args.response);
+                            // Only repopulate the table if our MD5 hash does not match the MD5
+                            // from the server
+                            if (md5.toLowerCase() != args.response.md5.toLowerCase()) {
+                                $('#songbookTable').DataTable().clear();
+                                md5 = args.response.md5;
+                                getSongbookCallback(args.response.songbook);
+                            }
                             break;
                         case "getPlaylist":
+                            $('#playlistTable').DataTable().clear();
                             getPlaylistCallback(args.response);
                             $.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
                             $.fn.dataTable.tables({visible: true, api: true}).scroller.measure();
@@ -108,9 +137,12 @@
                             }
                     }
                 };
+
+
             } catch (exception) {
-                $('#alertDialogMsg').text("Could not connect to server!");
+                $('#alertDialogMsg').text("Could not connect to the karaoke server!");
                 $('#alertDialog').modal('show');
+                $('.disconnectedOnly').show();
             }
         }
 
@@ -276,6 +308,25 @@
                 $('#unlockAdminDialog').modal('toggle');
             });
 
+            $('#confirmReconnect').on("click", function () {
+                $('#reconnectButton').click();
+            });
+
+            // On reconnect, request the songbook and the playlist
+            $('#reconnectButton').on("click", function() {
+                $('#alertDialogMsg').text("Trying to reconnect to the karaoke server...");
+                $('#alertDialog').modal('show');
+                initWebSocket(function() {
+                    sendMessage({"getSongbook": []});
+                    sendMessage({"getPlaylist": []});
+                    // On successful connection, hide reconnect button
+                    $('.disconnectedOnly').hide()
+
+                    $('#alertDialogMsg').text("Successfully reconnected to the karaoke server");
+                    $('#alertDialog').modal('show');
+                });
+            });
+
             // Admin buttons
             $('#playButton').on("click", function () {
                sendMessage({"play": []});
@@ -315,6 +366,8 @@
             text-align: center;
             font-size: 20px;
         }
+
+        .top-buffer { margin-top:20px; }
     </style>
 </head>
 <body>
@@ -369,10 +422,17 @@
             </div>
         </div>
     </div>
-    <br>
-    <div class="row">
+    <div class="row disconnectedOnly top-buffer">
+        <div class="col-xs-12 text-center disconnectedOnly">
+                <button type="button" class="btn btn-danger btn-block"
+                        id="reconnectButton">
+                    Reconnect
+                </button>
+        </div>
+    </div>
+    <div class="row top-buffer adminOnly">
         <div class="col-xs-12">
-            <div class="btn-group btn-group-justified adminOnly" role="group">
+            <div class="btn-group btn-group-justified" role="group">
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-primary" id="playButton">
                         <span class="glyphicon glyphicon-play"></span>
@@ -475,4 +535,5 @@
         </div>
     </div>
 </div>
+
 </body>

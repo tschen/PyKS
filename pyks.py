@@ -1,8 +1,26 @@
+#############################################################################
+##
+## Copyright (c) 2017 Tim Chen
+##
+## This file is part of PyKS.
+##
+## This file may be used under the terms of the GNU General Public License
+## version 3.0 as published by the Free Software Foundation and appearing in
+## the file LICENSE included in the packaging of this file.  Please review the
+## following information to ensure the GNU General Public License version 3.0
+## requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+##
+## This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+## WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+## See the GNU Public License along with PyKS.
+##
+#############################################################################
 # PyQt5 imports
 from PyQt5 import QtCore, QtGui, QtNetwork, QtSql, QtWidgets
 
 # Python3 std lib imports
 import collections
+import hashlib
 import json
 import os
 import re
@@ -825,8 +843,16 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             # transactions
             self.songbookdb.commit()
 
+            # Calculate the MD5 hash of the songbook. This will be used by
+            # the web app client to verify whether it needs to re-download the
+            # songbook if it reconnects.
+            m = hashlib.md5()
+            m.update(bytes(json.dumps(self.songbookJSON), 'utf-8'))
+
             self.songbookJSON = {"cmd": "getSongbook",
-                                 "response": {"data": self.songbookJSON}}
+                                 "response": {"md5": m.hexdigest(),
+                                              "songbook":
+                                                  {"data": self.songbookJSON}}}
             self.songbookJSON = json.dumps(self.songbookJSON)
             f.write(self.songbookJSON)
 

@@ -1,3 +1,20 @@
+#############################################################################
+##
+## Copyright (c) 2017 Tim Chen
+##
+## This file is part of PyKS.
+##
+## This file may be used under the terms of the GNU General Public License
+## version 3.0 as published by the Free Software Foundation and appearing in
+## the file LICENSE included in the packaging of this file.  Please review the
+## following information to ensure the GNU General Public License version 3.0
+## requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+##
+## This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+## WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+## See the GNU Public License along with PyKS.
+##
+#############################################################################
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'main_window.ui'
@@ -113,7 +130,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.playButton = QtWidgets.QPushButton(self.dockWidgetContents)
-        self.playButton.setToolTipDuration(-1)
         self.playButton.setText("")
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap("images/play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -122,6 +138,7 @@ class Ui_MainWindow(object):
         self.playButton.setChecked(False)
         self.playButton.setAutoRepeat(False)
         self.playButton.setAutoDefault(False)
+        self.playButton.setProperty("toolTipDuration", -1)
         self.playButton.setObjectName("playButton")
         self.horizontalLayout_2.addWidget(self.playButton)
         self.stopButton = QtWidgets.QPushButton(self.dockWidgetContents)

@@ -1,3 +1,20 @@
+#############################################################################
+##
+## Copyright (c) 2017 Tim Chen
+##
+## This file is part of PyKS.
+##
+## This file may be used under the terms of the GNU General Public License
+## version 3.0 as published by the Free Software Foundation and appearing in
+## the file LICENSE included in the packaging of this file.  Please review the
+## following information to ensure the GNU General Public License version 3.0
+## requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+##
+## This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+## WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+## See the GNU Public License along with PyKS.
+##
+#############################################################################
 # PyQt5 imports
 from PyQt5 import QtCore, QtNetwork, QtWebSockets
 
@@ -99,6 +116,7 @@ class WebServer (QtCore.QObject):
     def _processGET(self, message):
         socket = self.sender()
         requestURI = message.getRequestURI()
+
         date = time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.gmtime()).\
             encode('ascii')
         if requestURI in self.webResources:
@@ -140,6 +158,7 @@ class KaraokeServer(QtCore.QObject):
         super (KaraokeServer, self).__init__(parent)
 
         self.songbook = songbook
+
         self.password = ""
         self.playlist = []
 
@@ -148,6 +167,7 @@ class KaraokeServer(QtCore.QObject):
         # The KaraokeServer consists of a WebSocketServer and a WebServer.
         self.webSocketServer = QtWebSockets.QWebSocketServer(
             "Karaoke Server", QtWebSockets.QWebSocketServer.NonSecureMode, self)
+        self.webSocketServerPort = 0;
         self.WebSocketMethods = {"getSongbook": self._getSongbook,
                                  "getPlaylist":self._getPlaylist,
                                  'addToPlaylist': self._addToPlaylist,
@@ -169,9 +189,17 @@ class KaraokeServer(QtCore.QObject):
 
     def startServer(self, hostAddress, hostPort, maxConnectedClients,
                     allowMultipleConnections, password):
-        # If we can't start the webSocketServer, return False
-        if not self.webSocketServer.listen(hostAddress):
+        # If this is the first time we are starting the server (i.e. PyKS just
+        # launched), then self.webSocketServerPort will be set to 0 indicating
+        # that we should be assigned a port. Once a port is assigned, set
+        # self.webSocketServerPort to that port so that on subsequent
+        # startServer calls, we use the same webSocketServer port. This will
+        # allow clients to reconnect (i.e. they cannot reconnect if the server
+        # runs on a new port every time it starts).
+        if not self.webSocketServer.listen(hostAddress,
+                                           self.webSocketServerPort):
             return False
+        self.webSocketServerPort = self.webSocketServer.serverPort()
 
         self.webSocketServer.newConnection.connect(self.processNewConnection)
 
@@ -209,6 +237,7 @@ class KaraokeServer(QtCore.QObject):
         self.webServer.stopServer()
         self.webSocketServer.close()
         self.serverStateChanged.emit(self.OFF)
+
 
     @QtCore.pyqtSlot(list)
     def updatePlaylist(self, playlist):
@@ -249,13 +278,12 @@ class KaraokeServer(QtCore.QObject):
                 if not socketKey in self.clients:
                     self.clients[socketKey] = socket
                 else:
-                    socket.close(
-                        QtWebSockets.QWebSocketProtocol.CloseCodeNormal,
+                    socket.close(4000, # Close code
                         "Only a single connection to the server is allowed!")
             else:
                 # Close the socket with an error message
-                socket.close(QtWebSockets.QWebSocketProtocol.CloseCodeNormal,
-                             "Too many clients connected!")
+                socket.close(4001, # Close code
+                             "Server is no longer allowing new connections!")
 
 
     @QtCore.pyqtSlot()

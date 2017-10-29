@@ -1,3 +1,20 @@
+#############################################################################
+##
+## Copyright (c) 2017 Tim Chen
+##
+## This file is part of PyKS.
+##
+## This file may be used under the terms of the GNU General Public License
+## version 3.0 as published by the Free Software Foundation and appearing in
+## the file LICENSE included in the packaging of this file.  Please review the
+## following information to ensure the GNU General Public License version 3.0
+## requirements will be met: http://www.gnu.org/copyleft/gpl.html.
+##
+## This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+## WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+## See the GNU Public License along with PyKS.
+##
+#############################################################################
 # Special thanks to Jim Bumgardner and his paper on CD+G entitled "CD+G
 # Revealed: Playing back Karaoke tracks in Software".
 # Much of the text in this module was taken directly from this document.
