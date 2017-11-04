@@ -85,6 +85,12 @@ See the GNU Public License along with PyKS.
       <property name="contextMenuPolicy">
        <enum>Qt::CustomContextMenu</enum>
       </property>
+      <property name="dragEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="dragDropMode">
+       <enum>QAbstractItemView::DragOnly</enum>
+      </property>
       <property name="alternatingRowColors">
        <bool>true</bool>
       </property>
@@ -158,7 +164,16 @@ See the GNU Public License along with PyKS.
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_2">
-     <property name="margin">
+     <property name="leftMargin">
+      <number>10</number>
+     </property>
+     <property name="topMargin">
+      <number>10</number>
+     </property>
+     <property name="rightMargin">
+      <number>10</number>
+     </property>
+     <property name="bottomMargin">
       <number>10</number>
      </property>
      <item>
@@ -202,8 +217,17 @@ See the GNU Public License along with PyKS.
        <property name="contextMenuPolicy">
         <enum>Qt::CustomContextMenu</enum>
        </property>
+       <property name="acceptDrops">
+        <bool>true</bool>
+       </property>
        <property name="horizontalScrollBarPolicy">
         <enum>Qt::ScrollBarAsNeeded</enum>
+       </property>
+       <property name="showDropIndicator" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="dragEnabled">
+        <bool>true</bool>
        </property>
        <property name="dragDropMode">
         <enum>QAbstractItemView::DragDrop</enum>
@@ -229,6 +253,9 @@ See the GNU Public License along with PyKS.
          <property name="toolTip">
           <string>Play</string>
          </property>
+         <property name="toolTipDuration">
+          <number>-1</number>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -250,9 +277,6 @@ See the GNU Public License along with PyKS.
          </property>
          <property name="autoDefault">
           <bool>false</bool>
-         </property>
-         <property name="toolTipDuration" stdset="0">
-          <number>-1</number>
          </property>
         </widget>
        </item>

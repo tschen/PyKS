@@ -23,6 +23,7 @@ import collections
 import hashlib
 import json
 import os
+import pickle
 import re
 import sys
 import time
@@ -37,6 +38,7 @@ from widgets import AddToPlaylistDialog, AlertDialog, \
 
 class PlaylistModel (QtCore.QAbstractTableModel):
     playlistUpdated = QtCore.pyqtSignal(list)
+    dropAction = QtCore.pyqtSignal(dict)
 
     NUM_COLS = 4
     QUEUE_NUM_COL = 0
@@ -86,6 +88,79 @@ class PlaylistModel (QtCore.QAbstractTableModel):
             return self.playlist[index.row()][index.column()-1]
 
 
+    def flags(self, index):
+        defaultFlags = super(PlaylistModel, self).flags(index)
+
+        if index.isValid():
+            return QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled \
+                   | defaultFlags
+        else:
+            return QtCore.Qt.ItemIsDropEnabled | defaultFlags
+
+
+    def supportedDropActions(self):
+        return QtCore.Qt.CopyAction
+
+
+    def mimeTypes(self):
+        return ["application/prs.song"]
+
+
+    def mimeData(self, indexes):
+        mimeData = QtCore.QMimeData()
+        dragDropData = {'indexes':[], 'songs':[]}
+        for index in indexes:
+            # indexes will return a QModelIndex for each (row, column) item in
+            # our table. This means that there will be multiple indexes for
+            # each row, one for each of the table's columns. Since we only care
+            # about rows and not columns, don't store the item if we've already
+            # seen the row.
+            if index.row() not in dragDropData['indexes']:
+                dragDropData['indexes'].append(index.row())
+                dragDropData['songs'].append(self.playlist[index.row()])
+        mimeData.setData("application/prs.song", pickle.dumps(dragDropData))
+        return mimeData
+
+
+    def dropMimeData(self, data, action, row, column, parent):
+        # Only accept our special MIME type
+        if (not data.hasFormat("application/prs.song")):
+            return False
+
+        if (column > 0):
+            return False;
+
+        if action == QtCore.Qt.IgnoreAction:
+            return True
+
+        # We pass our MIME data as a byte stream representing a pickled python
+        # dictionary. When we receive the data on a drop action, turn it
+        # back into a dictionary.
+        dragDropData = pickle.loads(data.data("application/prs.song"))
+
+        # If dragDropData has indexes, this is an internal move as opposed
+        # to a drag and drop from a different widget. In this case, take
+        # care of the move internally by removing the selected items and
+        # dropping them in their new location.
+        if dragDropData['indexes']:
+            # First remove songs
+            self.removeSongs(dragDropData['indexes'])
+
+            # Next insert songs
+            if (parent.row() == -1):
+                self.appendSongs(dragDropData['songs'])
+            else:
+                self.insertSongs(parent.row(), dragDropData['songs'])
+        else:
+            # If this is not an internal move, copy the drop location
+            # into dragDropData and emit a signal with the
+            # with the drop data to let PyKS take care of the drop action.
+            dragDropData['indexes'] = parent.row()
+
+            self.dropAction.emit(dragDropData)
+        return True
+
+
     def appendSongs(self, songs):
         self.insertSongs(len(self.playlist), songs)
 
@@ -126,6 +201,48 @@ class PlaylistModel (QtCore.QAbstractTableModel):
             return self.getCurSong()
 
 
+class DragDropSqlQueryModel (QtSql.QSqlQueryModel):
+    NUM_COLS = 3
+    ARTIST_COL = 0
+    TITLE_COL = 1
+    SONG_ID_COL = 2
+
+    def flags(self, index):
+        defaultFlags = super(DragDropSqlQueryModel, self).flags(index)
+
+        if index.isValid():
+            return QtCore.Qt.ItemIsDragEnabled | defaultFlags
+        else:
+            return defaultFlags
+
+    def mimeTypes(self):
+        return ["application/prs.song"]
+
+    def mimeData(self, indexes):
+        mimeData = QtCore.QMimeData()
+        dragDropData = {'indexes':[], 'songs':[]}
+        rows = []
+
+        for index in indexes:
+            # indexes will return a QModelIndex for each (row, column) item in
+            # our table. This means that there will be multiple indexes for
+            # each row, one for each of the table's columns. Since we only care
+            # about rows and not columns, don't store the item if we've already
+            # seen the row.
+            if index.row() not in rows:
+                rows.append(index.row())
+                # songs are a list of [artist - title, SONG ID] lists
+                dragDropData['songs'].append(
+                    [''.join([
+                         self.index(index.row(), self.ARTIST_COL).data(),
+                         ' - ',
+                         self.index(index.row(), self.TITLE_COL).data()]),
+                     self.index(index.row(), self.SONG_ID_COL).data()])
+
+        mimeData.setData("application/prs.song", pickle.dumps(dragDropData))
+        return mimeData
+
+
 class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     SETTINGS_FILE = 'pyks.ini'
     SONGBOOK_DB_FILE = 'songbook.db'
@@ -156,8 +273,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # The songbook is stored as a SQLite database and as a JSON file on
         # disk. The SQLLite database is used by the main app while the JSON
-        # file is used by the web app. On startup try to open both database
-        # files. If either databse does not exist, create it by searching
+        # file is used by the web app. On startup try to open both files.
+        # If the database does not exist, create it by searching
         # through files found in self.settings.searchFolders.
         self.songbookdb = QtSql.QSqlDatabase.addDatabase('QSQLITE')
         self.songbookdb.setDatabaseName(self.SONGBOOK_DB_FILE)
@@ -174,9 +291,10 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Setup search results panel
         # The underlying model holding the data displayed by
-        # searchResultsListView is a QSqlQueryModel contained in a
+        # searchResultsListView is a DragDropSqlModel (which
+        # inherits from QSqlQueryModel) contained in a
         # QSortFilterProxyModel to allow for sorting.
-        self.sqlQueryModel = QtSql.QSqlQueryModel(self)
+        self.sqlQueryModel = DragDropSqlQueryModel(self)
         self.sqlQueryModel.setQuery\
             ('SELECT artist, title, songID from songs')
         # QSqlQueryModel only fetches 256 rows at a time
@@ -241,7 +359,6 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.playlistModel = PlaylistModel(self)
         self.playlistTableView.setModel(self.playlistModel)
         self.playlistTableView.verticalHeader().setVisible(False)
-        #self.playlistTableView.horizontalHeader().setStretchLastSection(True)
         # Hide the song ID column
         self.playlistTableView.hideColumn(PlaylistModel.SONG_ID_COL)
         # If we are not in performer mode, hide the performer column
@@ -318,6 +435,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.songbookUpdated.connect(self.karaokeServer.updateSongbook)
         self.playlistModel.playlistUpdated.connect(
             self.karaokeServer.updatePlaylist)
+        self.playlistModel.dropAction.connect(
+            self.doDropAction)
 
 
         # Holds all references to open lyrics windows. Since lysics windows
@@ -397,6 +516,25 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self._insertSongAt(1)
 
 
+    @QtCore.pyqtSlot(dict)
+    def doDropAction(self, dragDropData):
+        performer = ""
+
+        # If we are in performer mode, prompt the user for ther performer's
+        # name before adding the songs to the playlist
+        if self.settings.performerMode:
+            (result, performer) = self._confirmAddToPlaylist(
+                dragDropData['songs'])
+
+        if not self.settings.performerMode or result:
+            selectedSongs = [[performer] + selectedSong for selectedSong in
+                             dragDropData['songs']]
+            if dragDropData['indexes'] == -1:
+                self.appendToPlaylist(selectedSongs)
+            else:
+                self.insertInPlaylistAt(selectedSongs, dragDropData['indexes'])
+
+
     @QtCore.pyqtSlot()
     def addToPlaylist(self):
         selectedSongs = []
@@ -413,6 +551,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                                                      self.SONG_ID_COL).data()
             selectedSongs.append([songName, songID])
 
+        # If we are in performer mode, prompt the user for ther performer's
+        # name before adding the songs to the playlist
         if self.settings.performerMode:
             (result, performer) = self._confirmAddToPlaylist(selectedSongs)
 
@@ -931,7 +1071,6 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.songbookdb.close()
         for lyricsWindow in self.lyricsWindows:
             lyricsWindow.deleteLater()
-
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
