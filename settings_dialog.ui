@@ -1,19 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-Copyright (c) 2017 Tim Chen
-
-This file is part of PyKS.
-
-This file may be used under the terms of the GNU General Public License
-version 3.0 as published by the Free Software Foundation and appearing in
-the file LICENSE included in the packaging of this file.  Please review the
-following information to ensure the GNU General Public License version 3.0
-requirements will be met: http://www.gnu.org/copyleft/gpl.html.
-
-This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
-WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-See the GNU Public License along with PyKS.
--->
 <ui version="4.0">
  <class>SettingsDialog</class>
  <widget class="QDialog" name="SettingsDialog">
@@ -80,7 +65,7 @@ See the GNU Public License along with PyKS.
     </font>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="page">
     <widget class="QGroupBox" name="groupBox_4">
@@ -89,7 +74,7 @@ See the GNU Public License along with PyKS.
        <x>0</x>
        <y>30</y>
        <width>461</width>
-       <height>91</height>
+       <height>111</height>
       </rect>
      </property>
      <property name="font">
@@ -127,7 +112,7 @@ See the GNU Public License along with PyKS.
       <property name="geometry">
        <rect>
         <x>250</x>
-        <y>50</y>
+        <y>80</y>
         <width>31</width>
         <height>20</height>
        </rect>
@@ -142,7 +127,7 @@ See the GNU Public License along with PyKS.
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>50</y>
+        <y>80</y>
         <width>211</width>
         <height>16</height>
        </rect>
@@ -154,6 +139,27 @@ See the GNU Public License along with PyKS.
       </property>
       <property name="text">
        <string>Set seconds to wait  between songs</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="queueOnStartupCheckBox">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>50</y>
+        <width>231</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Use a playlist queue onstartup</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
     </widget>

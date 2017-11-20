@@ -1,20 +1,3 @@
-#############################################################################
-##
-## Copyright (c) 2017 Tim Chen
-##
-## This file is part of PyKS.
-##
-## This file may be used under the terms of the GNU General Public License
-## version 3.0 as published by the Free Software Foundation and appearing in
-## the file LICENSE included in the packaging of this file.  Please review the
-## following information to ensure the GNU General Public License version 3.0
-## requirements will be met: http://www.gnu.org/copyleft/gpl.html.
-##
-## This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
-## WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-## See the GNU Public License along with PyKS.
-##
-#############################################################################
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'settings_dialog.ui'
@@ -51,7 +34,7 @@ class Ui_SettingsDialog(object):
         self.page = QtWidgets.QWidget()
         self.page.setObjectName("page")
         self.groupBox_4 = QtWidgets.QGroupBox(self.page)
-        self.groupBox_4.setGeometry(QtCore.QRect(0, 30, 461, 91))
+        self.groupBox_4.setGeometry(QtCore.QRect(0, 30, 461, 111))
         font = QtGui.QFont()
         font.setPointSize(8)
         self.groupBox_4.setFont(font)
@@ -66,17 +49,24 @@ class Ui_SettingsDialog(object):
         self.performerModeCheckBox.setChecked(True)
         self.performerModeCheckBox.setObjectName("performerModeCheckBox")
         self.secondsToWaitTextBox = QtWidgets.QLineEdit(self.groupBox_4)
-        self.secondsToWaitTextBox.setGeometry(QtCore.QRect(250, 50, 31, 20))
+        self.secondsToWaitTextBox.setGeometry(QtCore.QRect(250, 80, 31, 20))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.secondsToWaitTextBox.setFont(font)
         self.secondsToWaitTextBox.setObjectName("secondsToWaitTextBox")
         self.label_5 = QtWidgets.QLabel(self.groupBox_4)
-        self.label_5.setGeometry(QtCore.QRect(30, 50, 211, 16))
+        self.label_5.setGeometry(QtCore.QRect(30, 80, 211, 16))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.label_5.setFont(font)
         self.label_5.setObjectName("label_5")
+        self.queueOnStartupCheckBox = QtWidgets.QCheckBox(self.groupBox_4)
+        self.queueOnStartupCheckBox.setGeometry(QtCore.QRect(50, 50, 231, 17))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.queueOnStartupCheckBox.setFont(font)
+        self.queueOnStartupCheckBox.setChecked(True)
+        self.queueOnStartupCheckBox.setObjectName("queueOnStartupCheckBox")
         self.stackedWidget.addWidget(self.page)
         self.page_2 = QtWidgets.QWidget()
         self.page_2.setObjectName("page_2")
@@ -187,7 +177,7 @@ class Ui_SettingsDialog(object):
         self.stackedWidget.addWidget(self.page_3)
 
         self.retranslateUi(SettingsDialog)
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(0)
         self.controlBox.accepted.connect(SettingsDialog.accept)
         self.controlBox.rejected.connect(SettingsDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(SettingsDialog)
@@ -198,6 +188,7 @@ class Ui_SettingsDialog(object):
         self.groupBox_4.setTitle(_translate("SettingsDialog", "General settings"))
         self.performerModeCheckBox.setText(_translate("SettingsDialog", "Performer Mode"))
         self.label_5.setText(_translate("SettingsDialog", "Set seconds to wait  between songs"))
+        self.queueOnStartupCheckBox.setText(_translate("SettingsDialog", "Use a playlist queue onstartup"))
         self.groupBox.setTitle(_translate("SettingsDialog", "Network settings"))
         self.label_2.setText(_translate("SettingsDialog", "IP Address"))
         self.hostAddressTextBox.setInputMask(_translate("SettingsDialog", "000.000.000.000"))

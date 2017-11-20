@@ -1,19 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-Copyright (c) 2017 Tim Chen
-
-This file is part of PyKS.
-
-This file may be used under the terms of the GNU General Public License
-version 3.0 as published by the Free Software Foundation and appearing in
-the file LICENSE included in the packaging of this file.  Please review the
-following information to ensure the GNU General Public License version 3.0
-requirements will be met: http://www.gnu.org/copyleft/gpl.html.
-
-This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
-WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-See the GNU Public License along with PyKS.
--->
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -21,7 +6,7 @@ See the GNU Public License along with PyKS.
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>873</width>
+    <width>1055</width>
     <height>570</height>
    </rect>
   </property>
@@ -89,7 +74,7 @@ See the GNU Public License along with PyKS.
        <bool>true</bool>
       </property>
       <property name="dragDropMode">
-       <enum>QAbstractItemView::DragOnly</enum>
+       <enum>QAbstractItemView::InternalMove</enum>
       </property>
       <property name="alternatingRowColors">
        <bool>true</bool>
@@ -109,7 +94,7 @@ See the GNU Public License along with PyKS.
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>873</width>
+     <width>1055</width>
      <height>21</height>
     </rect>
    </property>
@@ -128,8 +113,8 @@ See the GNU Public License along with PyKS.
   <widget class="QDockWidget" name="dockWidget">
    <property name="minimumSize">
     <size>
-     <width>300</width>
-     <height>484</height>
+     <width>417</width>
+     <height>495</height>
     </size>
    </property>
    <property name="font">
@@ -192,7 +177,7 @@ See the GNU Public License along with PyKS.
       </widget>
      </item>
      <item>
-      <widget class="PlaylistTableView" name="playlistTableView">
+      <widget class="SonglistTableView" name="playlistTableView">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -201,8 +186,8 @@ See the GNU Public License along with PyKS.
        </property>
        <property name="minimumSize">
         <size>
-         <width>280</width>
-         <height>377</height>
+         <width>397</width>
+         <height>395</height>
         </size>
        </property>
        <property name="font">
@@ -229,11 +214,14 @@ See the GNU Public License along with PyKS.
        <property name="dragEnabled">
         <bool>true</bool>
        </property>
+       <property name="dragDropOverwriteMode">
+        <bool>false</bool>
+       </property>
        <property name="dragDropMode">
         <enum>QAbstractItemView::DragDrop</enum>
        </property>
        <property name="defaultDropAction">
-        <enum>Qt::CopyAction</enum>
+        <enum>Qt::MoveAction</enum>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -337,6 +325,7 @@ See the GNU Public License along with PyKS.
    </attribute>
    <addaction name="actionNewScreen"/>
    <addaction name="separator"/>
+   <addaction name="actionShowQueueWindow"/>
    <addaction name="actionToggleServer"/>
   </widget>
   <action name="actionMenuQuit">
@@ -374,10 +363,25 @@ See the GNU Public License along with PyKS.
     <string>toggleServer</string>
    </property>
   </action>
+  <action name="actionShowQueueWindow">
+   <property name="icon">
+    <iconset>
+     <normaloff>images/song_queue.png</normaloff>images/song_queue.png</iconset>
+   </property>
+   <property name="text">
+    <string>Show Song Queue</string>
+   </property>
+   <property name="toolTip">
+    <string>Show Song Queue</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PlaylistTableView</class>
+   <class>SonglistTableView</class>
    <extends>QTableView</extends>
    <header>widgets</header>
   </customwidget>

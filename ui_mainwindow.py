@@ -1,20 +1,3 @@
-#############################################################################
-##
-## Copyright (c) 2017 Tim Chen
-##
-## This file is part of PyKS.
-##
-## This file may be used under the terms of the GNU General Public License
-## version 3.0 as published by the Free Software Foundation and appearing in
-## the file LICENSE included in the packaging of this file.  Please review the
-## following information to ensure the GNU General Public License version 3.0
-## requirements will be met: http://www.gnu.org/copyleft/gpl.html.
-##
-## This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
-## WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-## See the GNU Public License along with PyKS.
-##
-#############################################################################
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'main_window.ui'
@@ -28,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(873, 570)
+        MainWindow.resize(1055, 570)
         MainWindow.setFocusPolicy(QtCore.Qt.StrongFocus)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("images/icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -66,7 +49,7 @@ class Ui_MainWindow(object):
         self.searchResultsTableView.setFont(font)
         self.searchResultsTableView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.searchResultsTableView.setDragEnabled(True)
-        self.searchResultsTableView.setDragDropMode(QtWidgets.QAbstractItemView.DragOnly)
+        self.searchResultsTableView.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.searchResultsTableView.setAlternatingRowColors(True)
         self.searchResultsTableView.setShowGrid(False)
         self.searchResultsTableView.setSortingEnabled(True)
@@ -74,7 +57,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.searchResultsTableView)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 873, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1055, 21))
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
@@ -83,7 +66,7 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.dockWidget = QtWidgets.QDockWidget(MainWindow)
-        self.dockWidget.setMinimumSize(QtCore.QSize(300, 484))
+        self.dockWidget.setMinimumSize(QtCore.QSize(417, 495))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         self.dockWidget.setFont(font)
@@ -108,13 +91,13 @@ class Ui_MainWindow(object):
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
         self.verticalLayout_2.addWidget(self.label_2)
-        self.playlistTableView = PlaylistTableView(self.dockWidgetContents)
+        self.playlistTableView = SonglistTableView(self.dockWidgetContents)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.playlistTableView.sizePolicy().hasHeightForWidth())
         self.playlistTableView.setSizePolicy(sizePolicy)
-        self.playlistTableView.setMinimumSize(QtCore.QSize(280, 377))
+        self.playlistTableView.setMinimumSize(QtCore.QSize(397, 395))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -125,8 +108,9 @@ class Ui_MainWindow(object):
         self.playlistTableView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.playlistTableView.setProperty("showDropIndicator", True)
         self.playlistTableView.setDragEnabled(True)
+        self.playlistTableView.setDragDropOverwriteMode(False)
         self.playlistTableView.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
-        self.playlistTableView.setDefaultDropAction(QtCore.Qt.CopyAction)
+        self.playlistTableView.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.playlistTableView.setAlternatingRowColors(True)
         self.playlistTableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.playlistTableView.setShowGrid(False)
@@ -182,6 +166,11 @@ class Ui_MainWindow(object):
         self.actionMenuNewScreen.setObjectName("actionMenuNewScreen")
         self.actionToggleServer = QtWidgets.QAction(MainWindow)
         self.actionToggleServer.setObjectName("actionToggleServer")
+        self.actionShowQueueWindow = QtWidgets.QAction(MainWindow)
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap("images/song_queue.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionShowQueueWindow.setIcon(icon5)
+        self.actionShowQueueWindow.setObjectName("actionShowQueueWindow")
         self.menu_File.addAction(self.actionMenuNewScreen)
         self.menu_File.addAction(self.actionMenuSettings)
         self.menu_File.addSeparator()
@@ -189,6 +178,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menu_File.menuAction())
         self.toolBar.addAction(self.actionNewScreen)
         self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionShowQueueWindow)
         self.toolBar.addAction(self.actionToggleServer)
 
         self.retranslateUi(MainWindow)
@@ -215,5 +205,8 @@ class Ui_MainWindow(object):
         self.actionMenuSettings.setText(_translate("MainWindow", " &Settings..."))
         self.actionMenuNewScreen.setText(_translate("MainWindow", " New Lyrics Window"))
         self.actionToggleServer.setText(_translate("MainWindow", "toggleServer"))
+        self.actionShowQueueWindow.setText(_translate("MainWindow", "Show Song Queue"))
+        self.actionShowQueueWindow.setToolTip(_translate("MainWindow", "Show Song Queue"))
+        self.actionShowQueueWindow.setShortcut(_translate("MainWindow", "Ctrl+Q"))
 
-from widgets import PlaylistTableView, SearchBox
+from widgets import SearchBox, SonglistTableView

@@ -169,6 +169,14 @@ See the GNU Public License along with PyKS.
                 ],
 
                 "columnDefs": [
+                    {// Order by artist then by title
+                        "targets": [0],
+                        "orderData": [0, 1]
+                    },
+                    { // Order by title then by song
+                        "targets": [1],
+                        "orderData": [1, 0]
+                    },
                     {
                         "targets": [2],
                         "visible": false
@@ -182,7 +190,10 @@ See the GNU Public License along with PyKS.
                 "scrollY": "70vh",
                 "scrollCollapse": true,
                 "info": false,
-                "scroller": true,
+                "pagingType": "numbers",
+                "lengthChange": false,
+                "pageLength": 500,
+                "searchDelay": 500,
                 "language": {
                     "emptyTable": "Songbook is empty",
                     "zeroRecords": "No songs found",
@@ -217,6 +228,11 @@ See the GNU Public License along with PyKS.
                 "language": {
                     "emptyTable": "Playlist is empty"
                 }
+            });
+
+            // On a page change, scroll back to the top
+            $('#songbookTable').on('page.dt', function () {
+                $('#songbookTable, .dataTables_scrollBody').scrollTop(0)
             });
 
             $(document).on('shown.bs.tab', 'a[data-toggle="pill"]', function (e) {
