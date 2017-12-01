@@ -221,7 +221,7 @@ class Settings (object):
                             'HostAddress': newSettings.hostAddress,
                             'HostPort': newSettings.hostPort,
                             'AdminPassword': newSettings.adminPassword,
-                            'AllowMultpleConnections':
+                            'AllowMultipleConnections':
                                 newSettings.allowMultipleConnections,
                             'MaxConnectedClients':
                                 newSettings.maxConnectedClients}
@@ -337,7 +337,6 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
         # Grab all available interfaces
         allInterfaces = QtNetwork.QNetworkInterface.allInterfaces()
         for interface in allInterfaces:
-            print(interface.flags())
             if ((interface.flags() & interfaceFlags == interfaceFlags) \
                 ):#and (interface.flags() &
                  #           QtNetwork.QNetworkInterface.IsLoopBack == 0)):
@@ -348,7 +347,6 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
                                     address.ip() != (
                                     QtNetwork.QHostAddress(
                                         QtNetwork.QHostAddress.LocalHost)):
-                        print(address.ip().toString())
                         hostAddresses.append(address.ip())
                         # If there is more than one host address detected,
                         # show error dialog

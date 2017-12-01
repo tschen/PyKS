@@ -167,8 +167,9 @@ class QueueWindow(QtWidgets.QMainWindow, Ui_QueueWindow):
     # On a close, if there are songs in the queue, check if the user wants to
     # move the songs to the playlist.
     def closeEvent(self, event):
-        if self.queueModel.rowCount() > 0: # There are still songs in
-            # the queue
+        # There are still songs in the queue
+        if self.queueModel.rowCount() > 0:
+
             confirmClose = QtWidgets.QMessageBox(self)
             confirmClose.setWindowTitle("Confirm Close")
             confirmClose.setText("There are still songs in the song queue.\n"
@@ -1067,6 +1068,31 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     def closeEvent(self, event):
+        # If there are still songs in the playlist, confirm that the user
+        # wants to close the program
+        if self.playlistModel.rowCount() > 0:
+            confirmClose = QtWidgets.QMessageBox(self)
+            confirmClose.setWindowTitle("Confirm Close")
+            confirmClose.setText("Really close PyKS?")
+            confirmClose.setStandardButtons(QtWidgets.QMessageBox.Yes |
+                                            QtWidgets.QMessageBox.No)
+            confirmClose.setDefaultButton(QtWidgets.QMessageBox.No)
+            font = QtGui.QFont()
+            font.setPointSize(11)
+            font.setBold(False)
+            font.setWeight(50)
+            confirmClose.setFont(font)
+            result = confirmClose.exec()
+
+            if result == QtWidgets.QMessageBox.Yes:
+                self._cleanup()
+            else:
+                event.ignore()
+        else:
+            self._cleanup()
+
+
+    def _cleanup(self):
         # Close the database
         self.songbookdb.close()
 
@@ -1077,6 +1103,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Close the queue
         if self.queue:
             self.queue.deleteLater()
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
