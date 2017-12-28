@@ -125,6 +125,13 @@ See the GNU Public License along with PyKS.
                             if (args.response.data.length > 0)
                                 $("div.dataTables_scrollBody:last").scrollTop(scrollPos);
                             break;
+                        case "addToPlaylist":
+                            $('#alertDialogMsg').html("Successfully added <strong>" +
+                                args.response +
+                                " </strong>to the queue.<br/> Please wait a moment for the song " +
+                                " to appear in the playlist.");
+                            $('#alertDialog').modal('show');
+                            break;
                         case "submitPassword":
                             if (args.response) {
                                 $('.adminOnly').show()
@@ -411,6 +418,12 @@ See the GNU Public License along with PyKS.
         }
 
         .top-buffer { margin-top:20px; }
+
+        /* Bootstrap supresses the clear button at the end of a search bar.
+        Force the clear button to be shown */
+        input[type="search"]::-webkit-search-cancel-button {
+            -webkit-appearance: searchfield-cancel-button
+        }
     </style>
 </head>
 <body>

@@ -345,7 +345,37 @@ class KaraokeServer(QtCore.QObject):
 
 
     def _addToPlaylist(self, args):
+        socket = self.sender()
+        # args is a list with the following items
+        # [performer, artist - title, song ID]
         self.addToPlaylist.emit([args])
+
+        # Send response acknowledging receipt of song request
+        response = {"cmd": "addToPlaylist", "response": args[1]}
+        socket.sendTextMessage(json.dumps(response))
+
+
+    def _submitPassword(self, args):
+        socket = self.sender()
+        response = {"cmd": "submitPassword", "response": False}
+        if len(args) == 1:
+            if args[0] == self.password:
+                # Add client to the admin list
+                socketKey = socket.peerAddress().toString() \
+                            + ":" \
+                            + str(socket.peerPort())
+                self.admins.add(socketKey)
+                response["response"] = True
+        socket.sendTextMessage(json.dumps(response))
+
+
+    def _verifyClient(self, socket):
+        socketKey = socket.peerAddress().toString() \
+                    + ":" \
+                    + str(socket.peerPort())
+        if socketKey in self.admins:
+            return True
+        return False
 
 
     def _play(self, args):
@@ -380,26 +410,3 @@ class KaraokeServer(QtCore.QObject):
         socket = self.sender()
         if self._verifyClient(socket):
             self.playNow.emit([args], 1)
-
-
-    def _verifyClient(self, socket):
-        socketKey = socket.peerAddress().toString() \
-                    + ":" \
-                    + str(socket.peerPort())
-        if socketKey in self.admins:
-            return True
-        return False
-
-
-    def _submitPassword(self, args):
-        socket = self.sender()
-        response = {"cmd": "submitPassword", "response": False}
-        if len(args) == 1:
-            if args[0] == self.password:
-                # Add client to the admin list
-                socketKey = socket.peerAddress().toString() \
-                            + ":" \
-                            + str(socket.peerPort())
-                self.admins.add(socketKey)
-                response["response"] = True
-        socket.sendTextMessage(json.dumps(response))
