@@ -258,16 +258,16 @@ class AboutDialog (QtWidgets.QDialog, Ui_AboutDialog):
         self.creditsButton.clicked.connect(self.creditsClicked)
         self.okButton.clicked.connect(self.close)
 
-        self.changeAboutsMenu(AboutDialog.ABOUT_PAGE)
+        self.changeAboutMenu(AboutDialog.ABOUT_PAGE)
 
-    def changeAboutsMenu(self, index):
+    def changeAboutMenu(self, index):
         self.stackedWidget.setCurrentIndex(index)
 
     def creditsClicked(self):
-        self.changeAboutsMenu(AboutDialog.CREDITS_PAGE)
+        self.changeAboutMenu(AboutDialog.CREDITS_PAGE)
 
     def licenseClicked(self):
-        self.changeAboutsMenu(AboutDialog.LICENSE_PAGE)
+        self.changeAboutMenu(AboutDialog.LICENSE_PAGE)
 
 
 class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):

@@ -1,4 +1,4 @@
-##############################################################################
+#############################################################################
 ##
 ## Copyright (c) 2017 Tim Chen
 ##
@@ -17,7 +17,7 @@
 #############################################################################
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'lyrics_window.ui'
+# Form implementation generated from reading ui file 'about_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.9
 #
@@ -80,6 +80,7 @@ class Ui_AboutDialog(object):
         self.licensePage.setObjectName("licensePage")
         self.textEdit = QtWidgets.QTextEdit(self.licensePage)
         self.textEdit.setGeometry(QtCore.QRect(20, 20, 441, 301))
+        self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("textEdit")
         self.stackedWidget.addWidget(self.licensePage)
         self.creditsPage = QtWidgets.QWidget()
@@ -100,7 +101,7 @@ class Ui_AboutDialog(object):
         self.okButton.setObjectName("okButton")
 
         self.retranslateUi(AboutDialog)
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(AboutDialog)
 
     def retranslateUi(self, AboutDialog):
