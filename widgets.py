@@ -23,6 +23,7 @@ import configparser
 import pickle
 
 # PyKS imports
+from ui_aboutdialog import Ui_AboutDialog
 from ui_addtoplaylistdialog import Ui_AddToPlaylistDialog
 from ui_alertdialog import Ui_AlertDialog
 from ui_settingsdialog import Ui_SettingsDialog
@@ -238,6 +239,35 @@ class Settings (object):
             alert = AlertDialog("File Error",
                                  "Could not save settings to '%s'" % iniFile)
             alert.exec()
+
+
+class AboutDialog (QtWidgets.QDialog, Ui_AboutDialog):
+    ABOUT_PAGE = 0
+    LICENSE_PAGE = 1
+    CREDITS_PAGE = 2
+
+    def __init__(self, version, parent=None):
+        super(AboutDialog, self).__init__(parent)
+        self.setupUi(self)
+
+        # Set version
+        self.versionLabel.setText(str(version))
+
+        # Setup the License and Credits buttons
+        self.licenseButton.clicked.connect(self.licenseClicked)
+        self.creditsButton.clicked.connect(self.creditsClicked)
+        self.okButton.clicked.connect(self.close)
+
+        self.changeAboutsMenu(AboutDialog.ABOUT_PAGE)
+
+    def changeAboutsMenu(self, index):
+        self.stackedWidget.setCurrentIndex(index)
+
+    def creditsClicked(self):
+        self.changeAboutsMenu(AboutDialog.CREDITS_PAGE)
+
+    def licenseClicked(self):
+        self.changeAboutsMenu(AboutDialog.LICENSE_PAGE)
 
 
 class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):

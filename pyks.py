@@ -33,9 +33,8 @@ from server import KaraokeServer
 from ui_lyricswindow import Ui_LyricsWindow
 from ui_mainwindow import Ui_MainWindow
 from ui_queue_window import Ui_QueueWindow
-from widgets import AddToPlaylistDialog, AlertDialog, \
-    SonglistModel, DragDropSqlQueryModel, \
-    Settings, SettingsDialog
+from widgets import AboutDialog, AddToPlaylistDialog, SonglistModel, \
+    DragDropSqlQueryModel, Settings, SettingsDialog
 
 
 class LyricsWindow(QtWidgets.QMainWindow, Ui_LyricsWindow):
@@ -194,6 +193,8 @@ class QueueWindow(QtWidgets.QMainWindow, Ui_QueueWindow):
 
 
 class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
+    VERSION = 1.0
+
     SETTINGS_FILE = 'pyks.ini'
     SONGBOOK_DB_FILE = 'songbook.db'
     SONGBOOK_JSON_FILE = 'songbook.json'
@@ -334,6 +335,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionMenuNewScreen.triggered.connect(self.showNewLyricsWindow)
         self.actionNewScreen.triggered.connect(self.showNewLyricsWindow)
         self.actionMenuSettings.triggered.connect(self.showSettings)
+        self.actionMenuAbout.triggered.connect(self.showAbout)
         self.actionShowQueueWindow.triggered.connect(self.showQueue)
         self.actionToggleServer.triggered.connect(self.toggleServer)
 
@@ -709,6 +711,12 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         settingsDialog.exec()
         if settingsDialog.result():
             self._processNewSettings(settingsDialog.getSettings())
+
+
+    @QtCore.pyqtSlot()
+    def showAbout(self):
+        aboutDialog = AboutDialog(self.VERSION, self)
+        aboutDialog.exec()
 
 
     @QtCore.pyqtSlot(list)

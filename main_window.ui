@@ -122,7 +122,14 @@ See the GNU Public License along with PyKS.
     <addaction name="separator"/>
     <addaction name="actionMenuQuit"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionMenuAbout"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget">
@@ -391,6 +398,11 @@ See the GNU Public License along with PyKS.
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionMenuAbout">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>
