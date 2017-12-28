@@ -34,7 +34,9 @@ class WebServer (QtCore.QObject):
                               '.js': b'text/javascript',
                               '.txt': b'text/plain',
                               '.xml': b'text/xml',
-                              '.ico': b'images/png'
+                              '.ico': b'images/png',
+                              '.woff2': b'font/woff2',
+                              '.png': b'images/png'
                               }
     FIRST_PAGE = '/index.html'
     ROOT_DIR = 'www'
@@ -125,6 +127,7 @@ class WebServer (QtCore.QObject):
         else:
             status = b'404 Not Found'
             webResource = self.webResources['/notfound.html']
+
         data = (b''
                 b'HTTP/1.1 %s\r\n'
                 b'CONTENT-LENGTH: %d\r\n'
@@ -168,8 +171,9 @@ class KaraokeServer(QtCore.QObject):
         self.webSocketServer = QtWebSockets.QWebSocketServer(
             "Karaoke Server", QtWebSockets.QWebSocketServer.NonSecureMode, self)
         self.webSocketServerPort = 0;
-        self.WebSocketMethods = {"getSongbook": self._getSongbook,
-                                 "getPlaylist":self._getPlaylist,
+        self.WebSocketMethods = {'getSongbook': self._getSongbook,
+                                 'getPlaylist':self._getPlaylist,
+                                 'updatePlaylist':self._updatePlaylist,
                                  'addToPlaylist': self._addToPlaylist,
                                  'play': self._play,
                                  'nextSong': self._nextSong,
@@ -319,6 +323,12 @@ class KaraokeServer(QtCore.QObject):
     def _getPlaylist(self, args):
         socket = self.sender()
         response = self._createPlaylistResponse("getPlaylist")
+        socket.sendTextMessage(response)
+
+
+    def _updatePlaylist(self, args):
+        socket = self.sender()
+        response = self._createPlaylistResponse("updatePlaylist")
         socket.sendTextMessage(response)
 
 

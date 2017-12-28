@@ -46,6 +46,7 @@ See the GNU Public License along with PyKS.
         var getPlaylistCallback = null;
         var performer = "Anon Mouse";
         var md5 = "";
+        var password = "";
 
         $(document).ready(function () {
             initWebSocket(function() {
@@ -67,7 +68,7 @@ See the GNU Public License along with PyKS.
                 }
 
                 // If webSocket is already defined and opened, close it
-                if (websocket && websocket.websocket == 1) { // 1 -> Open
+                if (websocket && websocket.websocket == WebSocket.OPEN) {
                     websocket.close();
                 }
                 // Creaete a new WebSocket
@@ -78,10 +79,6 @@ See the GNU Public License along with PyKS.
 
                 websocket.onclose = function (evt) {
                     switch(evt.code) {
-                        case 1001: // Server closed connection
-                            alertText =
-                                "Lost connection to the karaoke server!";
-                            break;
                         case 4000: // Only one connection allowed
                         case 4001: // Server at capacity
                             alertText = evt.reason;
@@ -132,6 +129,8 @@ See the GNU Public License along with PyKS.
                             if (args.response) {
                                 $('.adminOnly').show()
                             } else {
+                                // on bad password, reset password to an empty string
+                                password = "";
                                 $('#alertDialogMsg').text("Wrong password!");
                                 $('#alertDialog').modal('show');
                             }
@@ -199,7 +198,7 @@ See the GNU Public License along with PyKS.
                 "language": {
                     "emptyTable": "Songbook is empty",
                     "zeroRecords": "No songs found",
-                    "loadingRecords": "Loading..."
+                    "loadingRecords": "Loading songbook..."
                 }
             });
 
@@ -232,6 +231,22 @@ See the GNU Public License along with PyKS.
                 }
             });
 
+			
+			// When the page closes, close the websocket
+			$(window).on('beforeunload', function () {
+				websocket.close();
+			});
+
+			
+            // On window focus, check if we are still connected to the server and refresh the
+            // playlist
+            $(window).focus(function() {
+                if (websocket.readyState == WebSocket.CLOSED) {
+                    $('#reconnectButton').trigger('click');
+                }
+            });
+
+            
             // On a page change, scroll back to the top
             $('#songbookTable').on('page.dt', function () {
                 $('#songbookTable, .dataTables_scrollBody').scrollTop(0)
@@ -274,7 +289,7 @@ See the GNU Public License along with PyKS.
 
 
             $('#songbookTable').on('click', 'tr', function () {
-                if (websocket.readyState == 1) {// 1 --> Open
+                if (websocket.readyState == WebSocket.OPEN) {
                     var table = $('#songbookTable').DataTable();
                     var addToPlaylistDialog = $('#addToPlaylistDialog')[0];
                     var data = table.row(this).data();
@@ -320,6 +335,7 @@ See the GNU Public License along with PyKS.
             });
 
             $('#submitPassword').on("click", function() {
+                password = $('#passwordInput').val();
                 sendMessage({'submitPassword': [
                     $('#passwordInput').val()
                 ]});
@@ -330,19 +346,28 @@ See the GNU Public License along with PyKS.
                 $('#reconnectButton').click();
             });
 
+
             // On reconnect, request the songbook and the playlist
             $('#reconnectButton').on("click", function() {
-                $('#alertDialogMsg').text("Trying to reconnect to the karaoke server...");
+                $('#alertDialogMsg').text("Trying to reconnect to server...");
                 $('#alertDialog').modal('show');
-                initWebSocket(function() {
-                    sendMessage({"getSongbook": []});
-                    sendMessage({"getPlaylist": []});
-                    // On successful connection, hide reconnect button
-                    $('.disconnectedOnly').hide()
+                if (websocket.readyState == WebSocket.CLOSED) {
+                    initWebSocket(function() {
+                        sendMessage({"getSongbook": []});
+                        sendMessage({"getPlaylist": []});
 
-                    $('#alertDialogMsg').text("Successfully reconnected to the karaoke server");
-                    $('#alertDialog').modal('show');
-                });
+                        // On successful connection, hide reconnect button
+                        // and any alarms we may have shown
+                        $('.disconnectedOnly').hide()
+                        $('#alertDialog').modal('hide');
+
+                        // If there was a valid password (i.e. the user had admin controls),
+                        // resubmit the password.
+                        if (password) {
+                            sendMessage({'submitPassword': [password]});
+                        }
+                    });
+                }
             });
 
             // Admin buttons
