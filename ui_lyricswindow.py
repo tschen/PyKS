@@ -31,7 +31,7 @@ class Ui_LyricsWindow(object):
         LyricsWindow.resize(300, 216)
         LyricsWindow.setMinimumSize(QtCore.QSize(300, 216))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("images/new_screen.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/images/new_screen.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         LyricsWindow.setWindowIcon(icon)
 
         self.retranslateUi(LyricsWindow)
@@ -41,3 +41,4 @@ class Ui_LyricsWindow(object):
         _translate = QtCore.QCoreApplication.translate
         LyricsWindow.setWindowTitle(_translate("LyricsWindow", "PyKS"))
 
+import resources_rc

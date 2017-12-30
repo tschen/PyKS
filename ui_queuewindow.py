@@ -17,7 +17,7 @@
 #############################################################################
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'lyrics_window.ui'
+# Form implementation generated from reading ui file 'queue_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9
 #
@@ -31,7 +31,7 @@ class Ui_QueueWindow(object):
         QueueWindow.resize(434, 466)
         QueueWindow.setAcceptDrops(True)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("images/song_queue.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/images/song_queue.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         QueueWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(QueueWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -89,3 +89,4 @@ class Ui_QueueWindow(object):
         self.label_2.setText(_translate("QueueWindow", "Song Queue"))
 
 from widgets import SonglistTableView
+import resources_rc

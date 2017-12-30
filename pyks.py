@@ -23,6 +23,7 @@ import collections
 import hashlib
 import json
 import os
+import pathlib
 import re
 import sys
 import time
@@ -32,9 +33,9 @@ from cdg import CdgPlayer
 from server import KaraokeServer
 from ui_lyricswindow import Ui_LyricsWindow
 from ui_mainwindow import Ui_MainWindow
-from ui_queue_window import Ui_QueueWindow
-from widgets import AboutDialog, AddToPlaylistDialog, SonglistModel, \
-    DragDropSqlQueryModel, Settings, SettingsDialog
+from ui_queuewindow import Ui_QueueWindow
+from widgets import AboutDialog, AddToPlaylistDialog, AlertDialog, \
+    SonglistModel, DragDropSqlQueryModel, Settings, SettingsDialog
 
 
 class LyricsWindow(QtWidgets.QMainWindow, Ui_LyricsWindow):
@@ -207,15 +208,35 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Run Ui_MainWindow.setupUi() to set up the main window
         self.setupUi(self)
 
+        # Get the user's home directory
+        pyksHome = os.path.expanduser('~')
+
+        # If expanduser failed (i.e. '~' remains unchanged), use the current
+        # directory.
+        if pyksHome == '~':
+            pyksHome = './';
+        else:
+            pyksHome = os.path.join(pyksHome, '.pyks')
+            # If the .pyks directory does not exist, try to create it
+            if not os.path.exists(pyksHome):
+                try:
+                    os.mkdir(pyksHome, 0o755)
+                except: # On exception use current directory
+                    pyksHome = './'
+
+        self.settingsFile = os.path.join(pyksHome, self.SETTINGS_FILE)
+        self.songbookdbFile = os.path.join(pyksHome, self.SONGBOOK_DB_FILE)
+        self.songbookJSONFile = os.path.join(pyksHome, self.SONGBOOK_JSON_FILE)
+
         # On startup, import settings from pyks.ini if the file exists.
         # If the file does not exist, create it with default settings.
-        if os.path.isfile(self.SETTINGS_FILE):
-            self.settings = Settings.readSettings(self.SETTINGS_FILE)
+        if os.path.isfile(self.settingsFile):
+            self.settings = Settings.readSettings(self.settingsFile)
         else:
             # Create default settings
             self.settings = Settings()
             # Write settings to ini file
-            Settings.writeSettings(self.settings, self.SETTINGS_FILE)
+            Settings.writeSettings(self.settings, self.settingsFile)
 
         # The songbook is stored as a SQLite database and as a JSON file on
         # disk. The SQLLite database is used by the main app while the JSON
@@ -223,17 +244,16 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # If the database does not exist, create it by searching
         # through files found in self.settings.searchFolders.
         self.songbookdb = QtSql.QSqlDatabase.addDatabase('QSQLITE')
-        self.songbookdb.setDatabaseName(self.SONGBOOK_DB_FILE)
-
-        if not os.path.isfile(self.SONGBOOK_DB_FILE) or not os.path.isfile(
-                self.SONGBOOK_JSON_FILE):
-            self._createSongbook(self.settings.searchFolders)
-
+        self.songbookdb.setDatabaseName(self.songbookdbFile)
         # We close the database when the app closes
         self.songbookdb.open()
 
+        if not os.path.isfile(self.songbookdbFile) or not os.path.isfile(
+                self.songbookJSONFile):
+            self._createSongbook(self.settings.searchFolders)
+
         # Open the JSON file and read in its contents
-        self.songbookJSON = open (self.SONGBOOK_JSON_FILE, 'r').read()
+        self.songbookJSON = open (self.songbookJSONFile, 'r').read()
 
         # Setup search results panel
         # The underlying model holding the data displayed by
@@ -353,11 +373,11 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # NOTE: This needs ot be setup before we try to start the server
         self.toggleServerLabel = self.toolBar.addWidget(QtWidgets.QLabel())
         self.serverOnIcon = QtGui.QIcon()
-        self.serverOnIcon.addPixmap(QtGui.QPixmap("images/start_server.png"),
+        self.serverOnIcon.addPixmap(QtGui.QPixmap(":/images/start_server.png"),
                                      QtGui.QIcon.Normal,
                                      QtGui.QIcon.Off)
         self.serverOffIcon = QtGui.QIcon()
-        self.serverOffIcon.addPixmap(QtGui.QPixmap("images/stop_server.png"),
+        self.serverOffIcon.addPixmap(QtGui.QPixmap(":/images/stop_server.png"),
                                     QtGui.QIcon.Normal,
                                     QtGui.QIcon.Off)
         # We need to connect the serverStateChanged signal before trying to
@@ -740,7 +760,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             DragDropSqlQueryModel.SONG_ID_COL)
         self.searchResultsTableView.resizeColumnsToContents()
         self.settings.searchFolders = searchFolders
-        Settings.writeSettings(self.settings, self.SETTINGS_FILE)
+        Settings.writeSettings(self.settings, self.settingsFile)
         self.karaokeServer.updateSongbook(self.songbookJSON)
 
 
@@ -806,7 +826,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.settings = newSettings
         # Write out new settings
-        Settings.writeSettings(self.settings, self.SETTINGS_FILE)
+        Settings.writeSettings(self.settings, self.settingsFile)
 
 
     @QtCore.pyqtSlot(QtCore.QPoint)
@@ -888,7 +908,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         #            artistNoPunc, "titleNoPunc": titleNoPunc, "songID": id},...
         #           ]}
         self.songbookJSON = []
-        f = open(self.SONGBOOK_JSON_FILE, 'w')
+        f = open(self.songbookJSONFile, 'w')
 
         # We scan through the folders and store mp3 files we find in the
         # mp3Files dictionary as

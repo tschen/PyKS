@@ -449,7 +449,7 @@ class SearchBox(QtWidgets.QLineEdit):
         super(SearchBox, self).__init__(parent)
 
         self.clearButton = QtWidgets.QToolButton(self)
-        pixmap = QtGui.QPixmap("images/clear.png")
+        pixmap = QtGui.QPixmap(":/images/clear.png")
 
         self.clearButton.setIcon(QtGui.QIcon(pixmap))
         self.clearButton.setIconSize(pixmap.size()/1.5)

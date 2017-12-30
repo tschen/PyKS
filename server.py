@@ -148,7 +148,7 @@ class KaraokeServer(QtCore.QObject):
     playNext = QtCore.pyqtSignal(list, int)
     serverStateChanged = QtCore.pyqtSignal(int)
 
-    WEB_APP_PATH = 'www/index.html'
+    WEB_APP_PATH = os.path.join (os.path.dirname(__file__), 'www/index.html')
 
     PERFORMER = 0
     SONG_NAME = 1
@@ -216,7 +216,6 @@ class KaraokeServer(QtCore.QObject):
         except:
             self.webSocketServer.close()
             self.webServer.stopServer()
-            f.close()
             return False
         webAppData = webAppData.replace('{hostAddressPort}',
                                hostAddress.toString()

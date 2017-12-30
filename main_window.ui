@@ -32,8 +32,8 @@ See the GNU Public License along with PyKS.
    <string>PyKS</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>images/icon.png</normaloff>images/icon.png</iconset>
+   <iconset resource="images/resources.qrc">
+    <normaloff>:/images/icon.png</normaloff>:/images/icon.png</iconset>
   </property>
   <property name="animated">
    <bool>true</bool>
@@ -270,8 +270,8 @@ See the GNU Public License along with PyKS.
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>images/play.png</normaloff>images/play.png</iconset>
+          <iconset resource="images/resources.qrc">
+           <normaloff>:/images/play.png</normaloff>:/images/play.png</iconset>
          </property>
          <property name="shortcut">
           <string>Ctrl+P</string>
@@ -299,8 +299,8 @@ See the GNU Public License along with PyKS.
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>images/stop.png</normaloff>images/stop.png</iconset>
+          <iconset resource="images/resources.qrc">
+           <normaloff>:/images/stop.png</normaloff>:/images/stop.png</iconset>
          </property>
          <property name="shortcut">
           <string>Ctrl+S</string>
@@ -319,8 +319,8 @@ See the GNU Public License along with PyKS.
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>images/next.png</normaloff>images/next.png</iconset>
+          <iconset resource="images/resources.qrc">
+           <normaloff>:/images/next.png</normaloff>:/images/next.png</iconset>
          </property>
          <property name="shortcut">
           <string>Ctrl+N</string>
@@ -348,7 +348,9 @@ See the GNU Public License along with PyKS.
    <addaction name="actionNewScreen"/>
    <addaction name="separator"/>
    <addaction name="actionShowQueueWindow"/>
+   <addaction name="separator"/>
    <addaction name="actionToggleServer"/>
+   <addaction name="separator"/>
   </widget>
   <action name="actionMenuQuit">
    <property name="text">
@@ -357,11 +359,11 @@ See the GNU Public License along with PyKS.
   </action>
   <action name="actionNewScreen">
    <property name="icon">
-    <iconset>
-     <normaloff>images/new_screen.png</normaloff>images/new_screen.png</iconset>
+    <iconset resource="images/resources.qrc">
+     <normaloff>:/images/new_screen.png</normaloff>:/images/new_screen.png</iconset>
    </property>
    <property name="text">
-    <string/>
+    <string>New screen</string>
    </property>
    <property name="toolTip">
     <string>New screen</string>
@@ -387,8 +389,8 @@ See the GNU Public License along with PyKS.
   </action>
   <action name="actionShowQueueWindow">
    <property name="icon">
-    <iconset>
-     <normaloff>images/song_queue.png</normaloff>images/song_queue.png</iconset>
+    <iconset resource="images/resources.qrc">
+     <normaloff>:/images/song_queue.png</normaloff>:/images/song_queue.png</iconset>
    </property>
    <property name="text">
     <string>Show Song Queue</string>
@@ -405,6 +407,14 @@ See the GNU Public License along with PyKS.
     <string>About</string>
    </property>
   </action>
+  <action name="actionConnectedClients">
+   <property name="text">
+    <string>connectedClients</string>
+   </property>
+   <property name="toolTip">
+    <string>Number of Connected Clients</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -418,7 +428,9 @@ See the GNU Public License along with PyKS.
    <header>widgets</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="images/resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>actionMenuQuit</sender>

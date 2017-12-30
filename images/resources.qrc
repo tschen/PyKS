@@ -1,0 +1,13 @@
+<RCC>
+  <qresource prefix="images">
+    <file>stop_server.png</file>
+    <file>stop.png</file>
+    <file>start_server.png</file>
+    <file>song_queue.png</file>
+    <file>play.png</file>
+    <file>next.png</file>
+    <file>new_screen.png</file>
+    <file>clear.png</file>
+    <file>icon.png</file>
+  </qresource>
+</RCC>

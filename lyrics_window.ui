@@ -35,10 +35,12 @@ See the GNU Public License along with PyKS.
    <string>PyKS</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>images/new_screen.png</normaloff>images/new_screen.png</iconset>
+   <iconset resource="images/resources.qrc">
+    <normaloff>:/images/new_screen.png</normaloff>:/images/new_screen.png</iconset>
   </property>
  </widget>
- <resources/>
+ <resources>
+  <include location="images/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
