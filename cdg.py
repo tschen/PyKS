@@ -87,7 +87,7 @@ class CdgPlayer (QtCore.QObject):
         self.cdgImageAsBitmap = numpy.reshape (self.cdgImageAsBitmap,
                                                (CDG_HEIGHT, CDG_WIDTH))
 
-        # We use the QT included Phonon MediaPlayer to play the audio
+        # We use the QtMultimedia.QMediaPlayer to play the audio
         self.mediaPlayer = QtMultimedia.QMediaPlayer(self)
         # Set the notify interval to 60 ms. Every 60 ms,
         # the positionChanged signal will be sent and decodeCdgPackets
@@ -170,10 +170,14 @@ class CdgPlayer (QtCore.QObject):
         # Calculate and store the rounding error
         self.__fractionalPacketsToProcess += (numPacketsToProcess
                                               - int(numPacketsToProcess))
+        
+        # if __fractionalPacketsToProcess > 1, add those packets to
+        # numPacketsToProcess
         numPacketsToProcess = (int(numPacketsToProcess)
                                + int (self.__fractionalPacketsToProcess))
         self.__fractionalPacketsToProcess -= \
             int(self.__fractionalPacketsToProcess)
+        
         # Update __previousReadTime
         self.__previousReadTime = time
 
@@ -365,11 +369,14 @@ class CdgPlayer (QtCore.QObject):
         self._exec_tile_block (data, True)
 
 
-    # TODO implement this
+    # Since we can view the entire "safe area", we just set the entire
+    # background to one color including the border with the memory preset
+    # command.
     def _exec_border_preset(self, data):
         pass
 
 
+    # Ignore these commands for now. These commands are rarely used.
     # TODO implement this
     def _exec_scroll_preset(self, data):
         pass

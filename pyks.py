@@ -23,7 +23,6 @@ import collections
 import hashlib
 import json
 import os
-import pathlib
 import re
 import sys
 import time
@@ -45,7 +44,7 @@ class LyricsWindow(QtWidgets.QMainWindow, Ui_LyricsWindow):
         super(LyricsWindow, self).__init__(parent)
         self.setupUi(self)
         # WA_OpaquePaintEvent indicates that the widget paints all its pixels
-        # when it recevies a paint event, so it's not necessary to erase the
+        # when it receives a paint event, so it's not necessary to erase the
         # widget before generating paint events.
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent)
         self.cdgPlayer = cdgPlayer

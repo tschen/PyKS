@@ -77,7 +77,6 @@ class Settings (object):
     DEFAULT_ADMIN_PASSWORD = "password"
     DEFAULT_ALLOW_MULTIPLE_CONNECTIONS = False
     DEFAULT_MAX_CONNECTED_CLIENTS = -1
-
     DEFAULT_SEARCH_FOLDERS = []
 
     def __init__(self,

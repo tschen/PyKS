@@ -24,6 +24,7 @@ import json
 import os
 import time
 
+# PyKS imports
 from http_utils import SimpleHTTPParser
 
 class WebServer (QtCore.QObject):
@@ -52,7 +53,7 @@ class WebServer (QtCore.QObject):
         self.tcpServer = QtNetwork.QTcpServer(self)
 
     def startServer(self, hostAddress, hostPort):
-        # Read into memory all the files we will be serving into memory
+        # Read all the files we will be serving into memory
         for root, dirs, files in os.walk('www'):
             for file in files:
                 filePath = os.path.join(root, file)

@@ -59,6 +59,7 @@ See the GNU Public License along with PyKS.
             $('.adminOnly').hide()
         });
 
+
         function initWebSocket(onOpenFunction) {
             try {
                 // Gecko 6.0-10.0 implemments the WebSocket object as MozWebSocket, so if this
@@ -71,7 +72,7 @@ See the GNU Public License along with PyKS.
                 if (websocket && websocket.websocket == WebSocket.OPEN) {
                     websocket.close();
                 }
-                // Creaete a new WebSocket
+                // Create a new WebSocket
                 websocket = new WebSocket("ws://{hostAddressPort}");
 
                 // Either load the datatable or reconnect and get songbook and playlist
@@ -143,8 +144,6 @@ See the GNU Public License along with PyKS.
                             }
                     }
                 };
-
-
             } catch (exception) {
                 $('#alertDialogMsg').text("Could not connect to the karaoke server!");
                 $('#alertDialog').modal('show');
@@ -156,12 +155,12 @@ See the GNU Public License along with PyKS.
         function sendMessage(data) {
             data = JSON.stringify(data)
             websocket.send(data);
-
         }
 
 
         function loadTable() {
             $.fn.dataTableExt.pager.numbers_length = 10;
+
 
             $('#songbookTable').DataTable({
                 "ajax": function (data, callback, settings) {
@@ -209,6 +208,7 @@ See the GNU Public License along with PyKS.
                 }
             });
 
+
             $('#playlistTable').DataTable({
                 "ajax": function (data, callback, settings) {
                     getPlaylistCallback = callback;
@@ -238,13 +238,13 @@ See the GNU Public License along with PyKS.
                 }
             });
 
-			
+
 			// When the page closes, close the websocket
 			$(window).on('beforeunload', function () {
 				websocket.close();
 			});
 
-			
+
             // On window focus, check if we are still connected to the server and refresh the
             // playlist
             $(window).focus(function() {
@@ -253,16 +253,18 @@ See the GNU Public License along with PyKS.
                 }
             });
 
-            
+
             // On a page change, scroll back to the top
             $('#songbookTable').on('page.dt', function () {
                 $('#songbookTable, .dataTables_scrollBody').scrollTop(0)
             });
 
+
             $(document).on('shown.bs.tab', 'a[data-toggle="pill"]', function (e) {
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust();
                 $.fn.dataTable.tables({visible: true, api: true}).scroller.measure();
             });
+
 
             // Add song queue index in first column for each new song
             $('#playlistTable').on('draw.dt', function () {
@@ -288,7 +290,6 @@ See the GNU Public License along with PyKS.
                         break;
                 }
             }
-
 
             $('input[name=actionType]').change(function() {
                 toggleAddToPlaylistText();
@@ -377,6 +378,7 @@ See the GNU Public License along with PyKS.
                 }
             });
 
+
             // Admin buttons
             $('#playButton').on("click", function () {
                sendMessage({"play": []});
@@ -390,7 +392,8 @@ See the GNU Public License along with PyKS.
                 sendMessage({"nextSong": []});
             });
 
-            // If ENTER is presssed and a dialog is open, accept the dialog
+
+            // If ENTER is presssed and any dialog is open, accept the dialog
             $('body').on('keydown', function (event) {
                 if (event.keyCode === 13) { // ENTER was pressed
                     if ($('#alertDialog').hasClass('in')) {
@@ -591,5 +594,4 @@ See the GNU Public License along with PyKS.
         </div>
     </div>
 </div>
-
 </body>

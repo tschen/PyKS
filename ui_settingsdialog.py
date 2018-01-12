@@ -17,7 +17,7 @@
 #############################################################################
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'lyrics_window.ui'
+# Form implementation generated from reading ui file 'settings_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.9
 #
@@ -201,7 +201,7 @@ class Ui_SettingsDialog(object):
 
     def retranslateUi(self, SettingsDialog):
         _translate = QtCore.QCoreApplication.translate
-        SettingsDialog.setWindowTitle(_translate("SettingsDialog", "Dialog"))
+        SettingsDialog.setWindowTitle(_translate("SettingsDialog", "Settings"))
         self.groupBox_4.setTitle(_translate("SettingsDialog", "General settings"))
         self.performerModeCheckBox.setText(_translate("SettingsDialog", "Performer Mode"))
         self.label_5.setText(_translate("SettingsDialog", "Set seconds to wait  between songs"))

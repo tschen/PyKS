@@ -133,7 +133,7 @@ class SimpleHTTPParser (object):
         #    Reason Phrase
         # If this message's status line does not contain 3 components
         # it is mangled.
-        if len (startLine)==  3:
+        if len (startLine) ==  3:
             # Determine if the message is a request or response
             # by determining if the first part of the message is
             # an HTTP version. If it is then this message is a
