@@ -88,8 +88,9 @@ See the GNU Public License along with PyKS.
                             alertText = "Could not connect to the karaoke server!";
 
                     }
-                    $('#alertDialogMsg').text(alertText);
-                    $('#alertDialog').modal('show');
+                    $('#modalDialogTitle').text('Alert');
+                    $('#modalDialogMsg').text(alertText);
+                    $('#modalDialog').modal('show');
                     $('.disconnectedOnly').show();
                 };
 
@@ -127,11 +128,12 @@ See the GNU Public License along with PyKS.
                                 $("div.dataTables_scrollBody:last").scrollTop(scrollPos);
                             break;
                         case "addToPlaylist":
-                            $('#alertDialogMsg').html("Successfully added <strong>" +
+                            $('#modalDialogTitle').text('Success!');
+                            $('#modalDialogMsg').html("Successfully added <strong>" +
                                 args.response +
                                 " </strong>to the queue.<br/> Please wait a moment for the song " +
                                 " to appear in the playlist.");
-                            $('#alertDialog').modal('show');
+                            $('#modalDialog').modal('show');
                             break;
                         case "submitPassword":
                             if (args.response) {
@@ -139,14 +141,16 @@ See the GNU Public License along with PyKS.
                             } else {
                                 // on bad password, reset password to an empty string
                                 password = "";
-                                $('#alertDialogMsg').text("Wrong password!");
-                                $('#alertDialog').modal('show');
+                                $('#modalDialogTitle').text('Alert');
+                                $('#modalDialogMsg').text("Wrong password!");
+                                $('#modalDialog').modal('show');
                             }
                     }
                 };
             } catch (exception) {
-                $('#alertDialogMsg').text("Could not connect to the karaoke server!");
-                $('#alertDialog').modal('show');
+                $('#modalDialogTitle').text('Alert');
+                $('#modalDialogMsg').text("Could not connect to the karaoke server!");
+                $('#modalDialog').modal('show');
                 $('.disconnectedOnly').show();
             }
         }
@@ -308,8 +312,9 @@ See the GNU Public License along with PyKS.
                     toggleAddToPlaylistText();
                     $('#addToPlaylistDialog').modal('show');
                 } else {
-                    $('#alertDialogMsg').text("Not connected to a server!");
-                    $('#alertDialog').modal('show');
+                    $('#modalDialogTitle').text('Alert');
+                    $('#modalDialogMsg').text("Not connected to a server!");
+                    $('#modalDialog').modal('show');
                 }
             });
 
@@ -357,8 +362,6 @@ See the GNU Public License along with PyKS.
 
             // On reconnect, request the songbook and the playlist
             $('#reconnectButton').on("click", function() {
-                $('#alertDialogMsg').text("Trying to reconnect to server...");
-                $('#alertDialog').modal('show');
                 if (websocket.readyState == WebSocket.CLOSED) {
                     initWebSocket(function() {
                         sendMessage({"getSongbook": []});
@@ -367,7 +370,7 @@ See the GNU Public License along with PyKS.
                         // On successful connection, hide reconnect button
                         // and any alarms we may have shown
                         $('.disconnectedOnly').hide()
-                        $('#alertDialog').modal('hide');
+                        $('#modalDialog').modal('hide');
 
                         // If there was a valid password (i.e. the user had admin controls),
                         // resubmit the password.
@@ -396,8 +399,8 @@ See the GNU Public License along with PyKS.
             // If ENTER is presssed and any dialog is open, accept the dialog
             $('body').on('keydown', function (event) {
                 if (event.keyCode === 13) { // ENTER was pressed
-                    if ($('#alertDialog').hasClass('in')) {
-                        $('#alertConfirm').trigger('click');
+                    if ($('#modalDialog').hasClass('in')) {
+                        $('#modalConfirm').trigger('click');
                     }
 
                     if ($('#unlockAdminDialog').hasClass('in')) {
@@ -576,18 +579,18 @@ See the GNU Public License along with PyKS.
     </div>
 </div>
 
-<div class="modal fade" id="alertDialog" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="modalDialog" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="padding:10px 25px;">
                 <button type=button" class="close" data-dismiss="modal">&times;</button>
-                <h4>Alert</h4>
+                <h4><span id="modalDialogTitle">Alert</span></h4>
             </div>
             <div class="modal-body" style="text-align: center; font-size:17px">
-                <span id="alertDialogMsg"></span>
+                <span id="modalDialogMsg"></span>
             </div>
             <div class="modal-footer">
-                <button type="button" id="alertConfirm" class="btn btn-primary"
+                <button type="button" id="modalConfirm" class="btn btn-primary"
                         data-dismiss="modal">Ok
                 </button>
             </div>
