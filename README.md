@@ -47,62 +47,27 @@ git clone https://gitlab.com/tschen/PyKS.git
 python pyks.py
 ```
 
-## Quickstart
-Before throwing that awesome karaoke party, you first need to create a songbook
-and (optionally) set up the karaoke server.
+## User Guide
+See the [user guide](USER_GUIDE.md) for more info on how to set up PyKS.
 
-#### Creating the Songbook
-To create the songbook, go to `File->Settings->Database` and browse for the 
-folder(s) containing your CD+G/MP3 files.
+## PyKS Images
+Here are some images of PyKS highlighting a few of its features.  
 
+![Main Window](docs/main_window_readme.png)  
+Search the songbook and view the current playlist   
+<br>
 
-![Update Database](docs/create_songbook.png)
+![Multiple Lyrics Windows](docs/multiple_lyrics_windows.png)  
+Open multiple lyrics windows for multiple external displays  
+<br>
 
+![Web App Songbook](docs/web_app_songbook.png)  
+View and select songs from the web app  
+<br>
 
-After adding your karaoke folder(s), click `OK`. PyKS will now scan through
-your folder(s) looking for CD+G files and their corresponding MP3 files.
-
-Some notes about filenames:
-* In order for PyKS to parse song names correctly, filenames must follow the
-_artist - title_ naming convention (e.g. `Journey - Don't Stop Believin'.cdg`
-and `Journey - Don't Stop Believin'.mp3`).
-* A CD+G file and its corresponding MP3 file must share the same filename.
-
-#### Setting Up the Karaoke Server
-To setup the karaoke server, go to `File->Settings->Server`. In the 
-"Network settings" ,
-you can either manually enter your computer's IP address and an open port or 
-click `Auto detect` to have PyKS automatically determine these values.
-
-
-![Setup Server](docs/setup_server.png)
-
-
-After inputting your network settings, click `OK`.
-
-Now, in the main PyKS window, click the lightning bolt toolbar button to 
-start the server.
-
-![Start Server](docs/start_server.png)
-
-If all goes well, the lightning bolt icon will change to a stop sign and the 
-"Not serving" text will be replaced by the IP address and port of the karaoke 
-server.
-
-![Server Running](docs/server_running.png)
-
-Once the server is up and running, anyone connected to your network (i.e. 
-connected to your router via WiFi) will be able to access your songbook, search 
-for songs, and add songs to the queue by pointing their browser to your karaoke 
-server's address and port. You can also stop the server at any time by clicking 
-the stop sign toolbar button.
-
-**Note:** if your server is not serving on port 80, you must type in the IP
-address **along with the port** in your browser. For example, if my karaoke 
-server is serving at IP address 192.168.1.2 and port 1204, I would type 
-`192.168.1.2:1204` in my browser. If the server _is_ serving on port 80, you 
-only need to type in the IP address.
-
+![Web App Controls](docs/web_app_controls_readme.png)  
+Control the karaoke player from the web app  
+<br>
 
 ## Built With
 
@@ -119,7 +84,8 @@ only need to type in the IP address.
 
 ## License
 
-This project is licensed under GPLv3 - see the [LICENSE](LICENSE) file for details
+This project is licensed under GPLv3 - see the [LICENSE](LICENSE) file 
+for details.
 
 ## Thanks
 
