@@ -40,7 +40,7 @@ sudo apt-get install libqt5multimedia5-plugins
 ## Installation
 1. Download or clone this repository.
 ```
-git clone https://gitlab.com/tschen/PyKS.git
+git clone https://github.com/tschen/PyKS.git
 ```
 2. Run PyKS from the command line 
 ```
