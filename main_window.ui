@@ -199,7 +199,7 @@ See the GNU Public License along with PyKS.
       </widget>
      </item>
      <item>
-      <widget class="SonglistTableView" name="playlistTableView">
+      <widget class="KeyPressTableView" name="playlistTableView">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -418,7 +418,7 @@ See the GNU Public License along with PyKS.
  </widget>
  <customwidgets>
   <customwidget>
-   <class>SonglistTableView</class>
+   <class>KeyPressTableView</class>
    <extends>QTableView</extends>
    <header>widgets</header>
   </customwidget>

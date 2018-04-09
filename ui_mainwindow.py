@@ -112,7 +112,7 @@ class Ui_MainWindow(object):
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
         self.verticalLayout_2.addWidget(self.label_2)
-        self.playlistTableView = SonglistTableView(self.dockWidgetContents)
+        self.playlistTableView = KeyPressTableView(self.dockWidgetContents)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -242,5 +242,5 @@ class Ui_MainWindow(object):
         self.actionConnectedClients.setText(_translate("MainWindow", "connectedClients"))
         self.actionConnectedClients.setToolTip(_translate("MainWindow", "Number of Connected Clients"))
 
-from widgets import SearchBox, SonglistTableView
+from widgets import KeyPressTableView, SearchBox
 import resources_rc

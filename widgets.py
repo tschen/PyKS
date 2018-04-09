@@ -19,6 +19,7 @@
 from PyQt5 import QtCore, QtGui, QtNetwork, QtSql, QtWidgets
 
 # Python3 std lib imports
+import collections
 import configparser
 import pickle
 
@@ -30,16 +31,16 @@ from ui_settingsdialog import Ui_SettingsDialog
 
 
 # This is a special QTableView that emits a signal when the Del key is
-# pressed, allowing us to remove songs with the keyboard.
-class SonglistTableView (QtWidgets.QTableView):
+# pressed, allowing us to remove items from our view with the Del key.
+class KeyPressTableView (QtWidgets.QTableView):
     removeSongs = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
-        super(SonglistTableView, self).__init__(parent)
+        super(KeyPressTableView, self).__init__(parent)
 
 
     def keyPressEvent(self, event):
-        super(SonglistTableView, self).keyPressEvent(event)
+        super(KeyPressTableView, self).keyPressEvent(event)
         if event.key() == QtCore.Qt.Key_Delete:
             self.removeSongs.emit()
 
@@ -417,7 +418,8 @@ class SettingsDialog (QtWidgets.QDialog, Ui_SettingsDialog):
 
     @QtCore.pyqtSlot()
     def browseClicked(self):
-        dialog = QtWidgets.QFileDialog(self, caption="Select folders", directory="./")
+        dialog = QtWidgets.QFileDialog(self, 
+                                       caption="Select folders", directory="./")
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOptions(QtWidgets.QFileDialog.ShowDirsOnly)
         dialog.setViewMode(QtWidgets.QFileDialog.List)
@@ -499,15 +501,17 @@ class SonglistModel (QtCore.QAbstractTableModel):
     songlistUpdated = QtCore.pyqtSignal(list)
     dropAction = QtCore.pyqtSignal(dict)
 
-    NUM_COLS = 4
+    NUM_COLS = 5
     QUEUE_NUM_COL = 0
     PERF_COL = 1
     SONG_NAME_COL = 2
     SONG_ID_COL = 3
+    IP_ADDRESS_COL = 4    
 
     PERFORMER = 0
     SONG_NAME = 1
     SONG_ID = 2
+    IP_ADDRESS = 3
 
     def __init__(self, parent=None):
         super(SonglistModel, self).__init__(parent)
@@ -547,6 +551,9 @@ class SonglistModel (QtCore.QAbstractTableModel):
                 if section == self.SONG_NAME_COL:
                     return "Song Name"
 
+                if section == self.IP_ADDRESS_COL:
+                    return "Client"
+        
                 return ""
 
 
@@ -555,6 +562,10 @@ class SonglistModel (QtCore.QAbstractTableModel):
             if index.column() == self.QUEUE_NUM_COL:
                 return str(index.row() + 1)
             return self.songlist[index.row()][index.column() - 1]
+
+        if index.column() == self.QUEUE_NUM_COL and \
+                role == QtCore.Qt.TextAlignmentRole:
+            return QtCore.Qt.AlignCenter
 
 
     def flags(self, index):
@@ -641,10 +652,10 @@ class SonglistModel (QtCore.QAbstractTableModel):
         self.songlistUpdated.emit(self.songlist)
 
 
-    def removeSongs(self, songPostions):
+    def removeSongs(self, songPositions):
         numRemoved = 0
 
-        for pos in songPostions:
+        for pos in songPositions:
             pos = pos - numRemoved
             self.beginRemoveRows(QtCore.QModelIndex(), pos, pos)
             del (self.songlist[pos])
@@ -709,7 +720,92 @@ class DragDropSqlQueryModel (QtSql.QSqlQueryModel):
                          self.index(index.row(), self.ARTIST_COL).data(),
                          ' - ',
                          self.index(index.row(), self.TITLE_COL).data()]),
-                     self.index(index.row(), self.SONG_ID_COL).data()])
+                    self.index(index.row(), self.SONG_ID_COL).data()])
 
         mimeData.setData("application/prs.song", pickle.dumps(dragDropData))
         return mimeData
+
+
+class ClientsModel(QtCore.QAbstractTableModel):
+    
+    NUM_COLS = 2
+    CLIENT_ADDRESS_COL = 0
+    HAS_ADMIN_COL = 1
+
+    def __init__(self, parent=None):
+        super(ClientsModel, self).__init__(parent)
+        # The clients dict is represented by a dictionary 
+        # containing the following data
+        # {client IP address: boolean indicating whether client has admin}
+        self.clients = collections.OrderedDict()
+
+
+    def rowCount(self, parent=None):
+        return len(self.clients)
+
+
+    def columnCount(self, parent=None):
+        return self.NUM_COLS
+
+
+    def headerData(self, section, orientation, role=None):
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                if section == self.CLIENT_ADDRESS_COL:
+                    return "Clients"
+
+                if section == self.HAS_ADMIN_COL:
+                    return "Has Admin"
+
+                return ""
+
+
+    def data(self, index, role=None):
+        if role == QtCore.Qt.DisplayRole:
+            clients = list(self.clients.items())
+            if index.column() == self.HAS_ADMIN_COL:
+                hasAdmin = 'N'
+                if clients[index.row()][1]:
+                    hasAdmin = 'Y'
+                return hasAdmin
+            return clients[index.row()][index.column()]
+
+        if index.column() == self.HAS_ADMIN_COL and \
+                role == QtCore.Qt.TextAlignmentRole:
+            return QtCore.Qt.AlignCenter
+    
+
+    def addClient(self, clientAddress):
+        self.beginInsertRows(QtCore.QModelIndex(), len(self.clients),
+                            len(self.clients))
+        self.clients[clientAddress] = False
+        self.endInsertRows()
+
+
+    def removeClient(self, clientAddress):
+        self.removeClients([list(self.clients.keys()).index(
+            clientAddress)])
+
+
+    def removeClients(self, clientPositions):
+        numRemoved = 0
+        for pos in clientPositions:
+            pos = pos - numRemoved
+            clientAddress = list(self.clients.keys())[pos]
+            self.beginRemoveRows(QtCore.QModelIndex(), pos, pos)
+            del (self.clients[clientAddress])
+            self.endRemoveRows()
+            numRemoved += 1
+            
+
+    def updateClientAdminStatus(self, clientAddress):
+        self.clients[clientAddress] = True
+        index = list(self.clients.keys()).index(clientAddress)
+        # Refresh the view
+        self.dataChanged.emit(self.index(index, 1), self.index(index, 1), 
+                              [QtCore.Qt.DisplayRole])
+
+    
+    def getNumClients(self):
+        return len(self.clients)
+    

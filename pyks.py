@@ -30,11 +30,13 @@ import time
 # PyKS imports
 from cdg import CdgPlayer
 from server import KaraokeServer
+from ui_clientswindow import Ui_ClientsWindow
 from ui_lyricswindow import Ui_LyricsWindow
 from ui_mainwindow import Ui_MainWindow
 from ui_queuewindow import Ui_QueueWindow
 from widgets import AboutDialog, AddToPlaylistDialog, AlertDialog, \
-    SonglistModel, DragDropSqlQueryModel, Settings, SettingsDialog
+    ClientsModel, SonglistModel, DragDropSqlQueryModel, Settings, \
+    SettingsDialog
 
 
 class LyricsWindow(QtWidgets.QMainWindow, Ui_LyricsWindow):
@@ -97,6 +99,8 @@ class QueueWindow(QtWidgets.QMainWindow, Ui_QueueWindow):
         self.queueTableView.verticalHeader().setVisible(False)
         # Hide the song ID column
         self.queueTableView.hideColumn(SonglistModel.SONG_ID_COL)
+        # Hide the IP Addresses column
+        self.queueTableView.hideColumn(SonglistModel.IP_ADDRESS_COL)
         # Remove songs when "del" key is pressed
         self.queueTableView.removeSongs.connect(self.removeFromQueue)
         # Use a custom context menu
@@ -110,13 +114,15 @@ class QueueWindow(QtWidgets.QMainWindow, Ui_QueueWindow):
 
     def appendSongs(self, songs):
         self.queueModel.appendSongs(songs)
-        self.queueTableView.resizeColumnsToContents()
+        for col in range(self.queueModel.NUM_COLS - 1):
+            self.queueTableView.resizeColumnToContents(col)
         self.queueTableView.horizontalHeader().setStretchLastSection(True)
 
 
     def insertInQueueAt(self, songs, index):
         self.queueModel.insertSongs(index, songs)
-        self.queueTableView.resizeColumnsToContents()
+        for col in range(self.queueModel.NUM_COLS - 1):
+            self.queueTableView.resizeColumnToContents(col)
         self.queueTableView.horizontalHeader().setStretchLastSection(True)
 
 
@@ -155,7 +161,10 @@ class QueueWindow(QtWidgets.QMainWindow, Ui_QueueWindow):
                                              SonglistModel.SONG_NAME_COL).data()
             songID = self.queueModel.index(modelIndex.row(),
                                            SonglistModel.SONG_ID_COL).data()
-            selectedSongs.append([performer, songName, songID])
+            ipAddress = self.queueModel.index(modelIndex.row(), 
+                                              SonglistModel.
+                                              IP_ADDRESS_COL).data()
+            selectedSongs.append([performer, songName, songID, ipAddress])
 
             songPositions.append(modelIndex.row())
 
@@ -189,6 +198,86 @@ class QueueWindow(QtWidgets.QMainWindow, Ui_QueueWindow):
                 if result == QtWidgets.QMessageBox.Yes:
                     self.songsSelected.emit(self.queueModel.getSonglist())
                 self.closedWindow.emit()
+        self.closedWindow.emit()
+
+
+class ClientsWindow(QtWidgets.QMainWindow, Ui_ClientsWindow):
+    closedWindow = QtCore.pyqtSignal()
+    removedClients = QtCore.pyqtSignal(list)
+    updatedNumClients = QtCore.pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super(ClientsWindow, self).__init__(parent)
+        self.setupUi(self)
+        
+        # Set up QSortFilterProxyModel to allow for sorting
+        self.clientsModel = ClientsModel(self)
+        self.sortFilterProxyModel = QtCore.QSortFilterProxyModel(self)
+        self.sortFilterProxyModel.setSourceModel(self.clientsModel)
+        self.clientsTableView.setModel(self.sortFilterProxyModel)
+        self.clientsTableView.verticalHeader().setVisible(False)
+        # Remove client when "del" key is pressed
+        self.clientsTableView.removeSongs.connect(self.removeSelectedClients)
+        # Use a custom context menu
+        self.clientsTableView.customContextMenuRequested.connect(
+            self.showClientsContextMenu)
+
+
+    @QtCore.pyqtSlot(str)
+    def addClient(self, clientAddress):
+        self.clientsModel.addClient(clientAddress)
+        for col in range(self.clientsModel.NUM_COLS - 1):
+            self.clientsTableView.resizeColumnToContents(col)
+        self.clientsTableView.horizontalHeader().setStretchLastSection(True)
+        self.updatedNumClients.emit(self.clientsModel.getNumClients())
+
+
+    @QtCore.pyqtSlot(str)
+    def removeClient(self, clientAddress):
+        self.clientsModel.removeClient(clientAddress)
+        self.updatedNumClients.emit(self.clientsModel.getNumClients())
+
+
+    @QtCore.pyqtSlot()
+    def removeSelectedClients(self):
+        rows = self.clientsTableView.selectionModel().selectedRows()
+        
+        # Remove clients from the server
+        clientAddresses = []
+        for modelIndex in rows:
+            address = self.clientsModel.index(modelIndex.row(),
+                                              ClientsModel.
+                                              CLIENT_ADDRESS_COL).data()
+            clientAddresses.append(address)
+        # We don't actually remove clients here. We just send a signal to the
+        # server to remove them. The server will emit a signal to us when they
+        # are removed.
+        self.removedClients.emit(clientAddresses)
+  
+  
+    @QtCore.pyqtSlot(str)
+    def updateClientAdminStatus(self, clientAddress):
+        self.clientsModel.updateClientAdminStatus(clientAddress)
+  
+  
+    @QtCore.pyqtSlot(QtCore.QPoint)
+    def showClientsContextMenu(self, position):
+        menu = QtWidgets.QMenu(self)
+        removeFromClientsAction = QtWidgets.QAction\
+            ("Remove client(s)", self)
+        removeFromClientsAction.triggered.connect(
+            self.removeSelectedClients)
+        menu.addAction(removeFromClientsAction)
+        # Place menu where the cursor is
+        menu.exec(self.clientsTableView.mapToGlobal(position))
+
+
+    @QtCore.pyqtSlot(int)
+    def getNumClients(self):
+        return self.clientsModel.getNumClients()
+
+    
+    def closeEvent(self, event):
         self.closedWindow.emit()
 
 
@@ -298,10 +387,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Set QTableView selection behavior to select only rows
         self.searchResultsTableView.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
-        self.searchResultsTableView.resizeColumnToContents(
-            DragDropSqlQueryModel.ARTIST_COL)
-        self.searchResultsTableView.horizontalHeader().setStretchLastSection(
-            True)
+        self._resizeAllColumnsExceptLast(self.searchResultsTableView, 
+                                         DragDropSqlQueryModel.NUM_COLS)
         # searchResultsTableView Signal/Slot
         self.searchResultsTableView.activated.connect(self.addToPlaylist)
         self.searchResultsTableView.customContextMenuRequested.connect(
@@ -328,6 +415,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.playlistTableView.verticalHeader().setVisible(False)
         # Hide the song ID column
         self.playlistTableView.hideColumn(SonglistModel.SONG_ID_COL)
+        # Hide the IP addresses column
+        self.playlistTableView.hideColumn(SonglistModel.IP_ADDRESS_COL)
         # If we are not in performer mode, hide the performer column and the
         # "Show Song Queue" toolbar button
         if not self.settings.performerMode:
@@ -364,13 +453,20 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # current song
         self.cdgPlayer.endOfMedia.connect(self.processEndOfMedia)
 
+        # Set up the clients window
+        self.clientsWindow = ClientsWindow()
+        self.clientsWindow.closedWindow.connect(self.closeClientsWindow)
+        self.clientsWindow.updatedNumClients.connect(self.updateNumClients)
+
         # KaraokeServer
         self.karaokeServer = KaraokeServer (self.songbookJSON)
         self.karaokeServerState = KaraokeServer.OFF
-        # Set up a QLabel on the toolbar. We will replace the text of the label
-        # whenever we toggle the server's state.
+        # Set up a QPushButton on the toolbar. We will replace the text of the 
+        # button whenever we toggle the server's state.
         # NOTE: This needs ot be setup before we try to start the server
-        self.toggleServerLabel = self.toolBar.addWidget(QtWidgets.QLabel())
+        self.serverInfoButton = QtWidgets.QPushButton()
+        self.toolBar.addWidget(self.serverInfoButton)
+        self.serverInfoButton.clicked.connect(self.showClientsWindow)
         self.serverOnIcon = QtGui.QIcon()
         self.serverOnIcon.addPixmap(QtGui.QPixmap(":/images/start_server.png"),
                                      QtGui.QIcon.Normal,
@@ -408,6 +504,14 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         self.karaokeServer.stop.connect(self.stop)
         self.karaokeServer.playNow.connect(self.insertInPlaylistAt)
         self.karaokeServer.playNext.connect(self.insertInPlaylistAt)
+        
+        self.karaokeServer.clientConnected.connect(self.clientsWindow.addClient)
+        self.karaokeServer.clientDisconnected.connect(
+            self.clientsWindow.removeClient)        
+        self.clientsWindow.removedClients.connect(
+            self.karaokeServer.removeClients)
+        self.karaokeServer.updatedClientAdminStatus.connect(
+            self.clientsWindow.updateClientAdminStatus)
 
         self.songbookUpdated.connect(self.karaokeServer.updateSongbook)
         self.playlistModel.songlistUpdated.connect(
@@ -501,8 +605,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             dragDropData['songs'])
 
         if result:
-            selectedSongs = [[performer] + selectedSong for selectedSong in
-                             dragDropData['songs']]
+            selectedSongs = [[performer] + selectedSong + ['localhost'] 
+                             for selectedSong in dragDropData['songs']]
             if dragDropData['indexes'] == -1:
                 self.appendToSonglist(selectedSongs)
             else:
@@ -521,8 +625,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                 dragDropData['songs'])
 
         if not self.settings.performerMode or result:
-            selectedSongs = [[performer] + selectedSong for selectedSong in
-                             dragDropData['songs']]
+            selectedSongs = [[performer] + selectedSong + ['localhost'] 
+                            for selectedSong in dragDropData['songs']]
             if dragDropData['indexes'] == -1:
                 self.appendToPlaylist(selectedSongs)
             else:
@@ -551,8 +655,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             (result, performer) = self._confirmAddToPlaylist(selectedSongs)
 
         if not self.settings.performerMode or result:
-            selectedSongs = [[performer] + selectedSong for selectedSong in
-                             selectedSongs]
+            selectedSongs = [[performer] + selectedSong 
+                             + ['localhost'] for selectedSong in selectedSongs]
             self.appendToSonglist(selectedSongs)
 
 
@@ -567,15 +671,15 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(list)
     def appendToPlaylist(self, songs):
         self.playlistModel.appendSongs(songs)
-        self.playlistTableView.resizeColumnsToContents()
-        self.playlistTableView.horizontalHeader().setStretchLastSection(True)
+        self._resizeAllColumnsExceptLast(self.playlistTableView, 
+                                         SonglistModel.NUM_COLS)
 
 
     @QtCore.pyqtSlot(list, int)
     def insertInPlaylistAt(self, song, position):
         self.playlistModel.insertSongs(position, song)
-        self.playlistTableView.resizeColumnsToContents()
-        self.playlistTableView.horizontalHeader().setStretchLastSection(True)
+        self._resizeAllColumnsExceptLast(self.playlistTableView, 
+                                         SonglistModel.NUM_COLS)
 
 
     def _insertSongAt(self, position):
@@ -591,7 +695,7 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                 (result, performer) = self._confirmAddToPlaylist(selectedSong)
 
             if not self.settings.performerMode or result:
-                selectedSong = [[performer] + selectedSong[0]]
+                selectedSong = [[performer] + selectedSong[0] + ['localhost']]
                 self.insertInPlaylistAt(selectedSong, position)
                 return True
         return False
@@ -605,7 +709,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.sortFilterProxyModel.index
                     (modelIndex.row(), DragDropSqlQueryModel.TITLE_COL).data(),
                     self.sortFilterProxyModel.index
-                    (modelIndex.row(), DragDropSqlQueryModel.SONG_ID_COL).data())
+                    (modelIndex.row(), 
+                     DragDropSqlQueryModel.SONG_ID_COL).data())
         else:
             return None
 
@@ -711,16 +816,23 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.pyqtSlot(int)
     def processServerStateChanged(self, state):
         self.karaokeServerState = state
-        label = self.toolBar.widgetForAction(self.toggleServerLabel)
         if state == KaraokeServer.ON:
             self.actionToggleServer.setIcon(self.serverOffIcon)
-            label.setText("Serving: %s:%d" % (self.settings.hostAddress,
-                                              self.settings.hostPort))
+            self.updateNumClients(
+                self.clientsWindow.getNumClients())
             self.actionToggleServer.setToolTip("Turn server off")
         else:
             self.actionToggleServer.setIcon(self.serverOnIcon)
-            label.setText("Not Serving")
+            self.serverInfoButton.setText("Not Serving")
             self.actionToggleServer.setToolTip("Turn server on")
+
+
+    @QtCore.pyqtSlot(int)
+    def updateNumClients(self, int):
+        self.serverInfoButton.setText("Serving %d clients: %s:%d" % (
+            self.clientsWindow.getNumClients(),
+            self.settings.hostAddress,
+            self.settings.hostPort))
 
 
     @QtCore.pyqtSlot()
@@ -757,7 +869,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Hide Song ID column
         self.searchResultsTableView.hideColumn(
             DragDropSqlQueryModel.SONG_ID_COL)
-        self.searchResultsTableView.resizeColumnsToContents()
+        self._resizeAllColumnsExceptLast(self.searchResultsTableView, 
+                                         DragDropSqlQueryModel.NUM_COLS)
         self.settings.searchFolders = searchFolders
         Settings.writeSettings(self.settings, self.settingsFile)
         self.karaokeServer.updateSongbook(self.songbookJSON)
@@ -794,11 +907,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
                 DragDropSqlQueryModel.SONG_ID_COL)
 
             # Need to set up table again for new content
-            self.searchResultsTableView.resizeColumnsToContents()
-            self.searchResultsTableView.horizontalHeader(
-
-            ).setStretchLastSection(
-                True)
+            self._resizeAllColumnsExceptLast(self.searchResultsTableView, 
+                                             DragDropSqlQueryModel.NUM_COLS)
             self.sortFilterProxyModel.setHeaderData(
                 DragDropSqlQueryModel.ARTIST_COL,
                 QtCore.Qt.Horizontal,
@@ -874,11 +984,6 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             [modelIndex.row() for modelIndex in rows])
 
 
-    @QtCore.pyqtSlot()
-    def closeQueueWindow(self):
-        self.queue = None
-
-
     def showQueue(self):
         if not self.queue:
             self.queue = QueueWindow()
@@ -887,7 +992,35 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
             self.queue.closedWindow.connect(self.closeQueueWindow)
         self.queue.showNormal()
         self.queue.raise_()
-
+    
+    
+    @QtCore.pyqtSlot()
+    def closeQueueWindow(self):
+        self.queue = None
+    
+    
+    @QtCore.pyqtSlot()
+    def showClientsWindow(self):
+        self.clientsWindow.show()
+        
+        # Make IP Addresses columns in the playlist and queue (if queue is
+        # visible) visible
+        self.playlistTableView.showColumn(SonglistModel.IP_ADDRESS_COL)
+        if self.queue:
+            self.queue.queueTableView.showColumn(SonglistModel.IP_ADDRESS_COL)
+        
+    
+    @QtCore.pyqtSlot()
+    def closeClientsWindow(self):
+        # Hide the IP addresses column on a clientsWindow close
+        self.playlistTableView.hideColumn(SonglistModel.IP_ADDRESS_COL)
+        self._resizeAllColumnsExceptLast(self.playlistTableView, 
+                                         SonglistModel.NUM_COLS)
+        if self.queue:
+            self.queue.queueTableView.hideColumn(SonglistModel.IP_ADDRESS_COL)
+            self._resizeAllColumnsExceptLast(self.queue.queueTableView,
+                                             SonglistModel.NUM_COLS)
+    
     
     def _createSongbook (self, searchFolders):
         # Convert to a set to remove any redundant folders
@@ -1094,6 +1227,12 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         return (artist, artistNoPunc, title, titleNoPunc)
 
 
+    def _resizeAllColumnsExceptLast(self, tableView, num_cols):
+        for col in range(num_cols - 1):
+            tableView.resizeColumnToContents(col)
+        tableView.horizontalHeader().setStretchLastSection(True)
+
+
     def closeEvent(self, event):
         # If there are still songs in the playlist, confirm that the user
         # wants to close the program
@@ -1130,6 +1269,8 @@ class PyKS(QtWidgets.QMainWindow, Ui_MainWindow):
         # Close the queue
         if self.queue:
             self.queue.deleteLater()
+        
+        self.clientsWindow.deleteLater()
 
 
 def main():

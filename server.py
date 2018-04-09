@@ -147,7 +147,11 @@ class KaraokeServer(QtCore.QObject):
     stop = QtCore.pyqtSignal()
     playNow = QtCore.pyqtSignal(list, int)
     playNext = QtCore.pyqtSignal(list, int)
+    
     serverStateChanged = QtCore.pyqtSignal(int)
+    clientConnected = QtCore.pyqtSignal(str)
+    clientDisconnected = QtCore.pyqtSignal(str)
+    updatedClientAdminStatus = QtCore.pyqtSignal(str)
 
     WEB_APP_PATH = os.path.join (os.path.dirname(__file__), 'www/index.html')
 
@@ -234,12 +238,17 @@ class KaraokeServer(QtCore.QObject):
 
 
     def stopServer(self):
+        # Remove client from clients
+        for socketKey in list(self.clients):
+            del self.clients[socketKey]
+            self.clientDisconnected.emit(socketKey)
+        
         # Clear admins and clients
-        self.clients.clear()
         self.admins.clear()
 
         self.webServer.stopServer()
         self.webSocketServer.close()
+        
         self.serverStateChanged.emit(self.OFF)
 
 
@@ -269,7 +278,7 @@ class KaraokeServer(QtCore.QObject):
                 if self.allowMultipleConnections:
                     # If we allow multiple connections from the same client,
                     # we use the IP address concatenated with the port as the
-                    #  socket key becuase a client can connect to the server
+                    #  socket key because a client can connect to the server
                     # through different browsers/browser tabs. Otherwise,
                     # we just use the IP address and don't allow the
                     # connection if a connection with the client already
@@ -281,6 +290,7 @@ class KaraokeServer(QtCore.QObject):
                     socketKey = socket.peerAddress().toString()
                 if not socketKey in self.clients:
                     self.clients[socketKey] = socket
+                    self.clientConnected.emit(socketKey)
                 else:
                     socket.close(4000, # Close code
                         "Only a single connection to the server is allowed!")
@@ -302,8 +312,17 @@ class KaraokeServer(QtCore.QObject):
         if socketKey in self.clients:
             if socket == self.clients[socketKey]:
                 del self.clients[socketKey]
+                self.clientDisconnected.emit(socketKey)
         if socketKey in self.admins:
             self.admins.remove(socketKey)
+
+
+    @QtCore.pyqtSlot(list)
+    def removeClients(self, socketKeys):
+        for socketKey in socketKeys:
+            if socketKey in self.clients:
+                socket = self.clients[socketKey]
+                socket.close()
 
 
     @QtCore.pyqtSlot('QString')
@@ -346,8 +365,16 @@ class KaraokeServer(QtCore.QObject):
 
     def _addToPlaylist(self, args):
         socket = self.sender()
+        if self.allowMultipleConnections:
+            socketKey = socket.peerAddress().toString() \
+                        + ":" \
+                        + str(socket.peerPort())
+        else:
+            socketKey = socket.peerAddress().toString()
         # args is a list with the following items
         # [performer, artist - title, song ID]
+        # Append the IP address of the sender to the list
+        args.append(socketKey)
         self.addToPlaylist.emit([args])
 
         # Send response acknowledging receipt of song request
@@ -361,10 +388,14 @@ class KaraokeServer(QtCore.QObject):
         if len(args) == 1:
             if args[0] == self.password:
                 # Add client to the admin list
-                socketKey = socket.peerAddress().toString() \
-                            + ":" \
-                            + str(socket.peerPort())
+                if self.allowMultipleConnections:
+                    socketKey = socket.peerAddress().toString() \
+                                + ":" \
+                                + str(socket.peerPort())
+                else:
+                    socketKey = socket.peerAddress().toString()
                 self.admins.add(socketKey)
+                self.updatedClientAdminStatus.emit(socketKey)
                 response["response"] = True
         socket.sendTextMessage(json.dumps(response))
 
